@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>RINZME</title>
+<style>
+:root {
+  --ivory:    #F5F2EC;
+  --fog:      #EAE5DC;
+  --fog-dk:   #D8D1C7;
+  --green:    #27382E;
+  --green-md: #3A5448;
+  --green-lt: #587060;
+  --terra:    #A55040;
+  --terra-lt: #C87860;
+  --text:     #1C1C1A;
+  --text-md:  #58534E;
+  --text-lt:  #9A9590;
+  --ln:       #D0CBC2;
+  --ln-lt:    #E4E0DA;
+}
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html,body { height:100%; font-family:'Helvetica Neue','Hiragino Kaku Gothic ProN',sans-serif; -webkit-font-smoothing:antialiased; }
+body { background:#18181A; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+
+/* PHONE */
+#phone { width:390px; height:844px; background:var(--ivory); border-radius:44px; overflow:hidden; box-shadow:0 48px 120px rgba(0,0,0,0.75),0 0 0 1px rgba(255,255,255,0.04); display:flex; flex-direction:column; position:relative; }
+
+/* STATUS BAR */
+.status-bar { background:var(--green); color:rgba(255,255,255,0.5); height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 28px; font-size:11px; flex-shrink:0; }
+
+/* CONTENT AREA */
+#content { flex:1; overflow:hidden; position:relative; }
+.screen-sec { position:absolute; inset:0; flex-direction:column; overflow-y:auto; display:none; }
+.screen-sec.active { display:flex; }
+.screen-sec::-webkit-scrollbar { display:none; }
+
+/* BOTTOM NAV */
+.bottom-nav { height:56px; background:var(--ivory); border-top:1px solid var(--ln-lt); display:flex; flex-shrink:0; position:relative; z-index:200; }
+.bnav-btn { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; background:none; border:none; cursor:pointer; color:var(--text-lt); transition:color 0.15s; }
+.bnav-btn.active { color:var(--green); }
+.bnav-icon { width:20px; height:20px; }
+.bnav-lbl { font-size:7px; letter-spacing:1.5px; text-transform:uppercase; }
+
+/* ─── HOME SCREEN ─── */
+.home-hdr { background:var(--green); padding:12px 24px 16px; display:flex; align-items:flex-end; justify-content:space-between; flex-shrink:0; }
+.home-wordmark { font-size:16px; font-weight:200; color:#fff; letter-spacing:9px; text-transform:uppercase; }
+.home-profile { display:flex; align-items:center; gap:8px; }
+.home-profile-date { font-size:8px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,0.35); text-align:right; }
+.home-profile-name { font-size:10px; color:rgba(255,255,255,0.6); margin-top:1px; text-align:right; }
+.home-avatar { width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); display:flex; align-items:center; justify-content:center; font-size:11px; color:rgba(255,255,255,0.7); letter-spacing:0; }
+
+.home-hero { background:var(--green); padding:0 24px 20px; flex-shrink:0; }
+.home-score-row { display:flex; align-items:flex-end; gap:0; margin-bottom:12px; }
+.home-score-num { font-size:64px; font-weight:100; color:#fff; letter-spacing:-4px; line-height:1; margin-right:10px; }
+.home-score-info { padding-bottom:6px; }
+.home-score-lbl { font-size:8px; letter-spacing:2.5px; text-transform:uppercase; color:rgba(255,255,255,0.3); margin-bottom:3px; }
+.home-score-status { font-size:11px; color:rgba(255,255,255,0.65); font-weight:300; letter-spacing:0.3px; }
+.home-score-delta { font-size:10px; color:var(--terra-lt); margin-left:auto; padding-bottom:6px; }
+.home-track { height:1px; background:rgba(255,255,255,0.1); position:relative; margin-bottom:16px; }
+.home-fill { height:100%; background:rgba(255,255,255,0.45); }
+.home-scan-row { display:flex; align-items:center; justify-content:space-between; }
+.home-scan-info { font-size:8px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,0.3); }
+.btn-goto-analysis { padding:8px 16px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.25); color:rgba(255,255,255,0.8); font-size:8.5px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; }
+.btn-goto-analysis:hover { background:rgba(255,255,255,0.18); }
+
+.home-metrics { display:grid; grid-template-columns:repeat(4,1fr); border-bottom:1px solid var(--ln-lt); flex-shrink:0; }
+.hm-cell { padding:13px 6px; border-right:1px solid var(--ln-lt); text-align:center; }
+.hm-cell:last-child { border-right:none; }
+.hm-val { font-size:16px; font-weight:200; color:var(--text); letter-spacing:-0.5px; line-height:1.1; }
+.hm-unit { font-size:8px; color:var(--text-lt); }
+.hm-lbl { font-size:7px; letter-spacing:1px; text-transform:uppercase; color:var(--text-lt); margin-top:4px; }
+.hm-d { font-size:7px; margin-top:2px; }
+
+.home-section { padding:18px 24px; border-bottom:1px solid var(--ln-lt); flex-shrink:0; }
+.home-sec-hd { font-size:8px; letter-spacing:2.5px; text-transform:uppercase; color:var(--text-lt); margin-bottom:14px; }
+
+/* Cortisol mini trend */
+.cort-mini { display:flex; align-items:flex-end; gap:0; margin-bottom:6px; }
+.cort-val-large { font-size:28px; font-weight:200; color:var(--text); letter-spacing:-1px; }
+.cort-unit { font-size:10px; color:var(--text-lt); margin-left:4px; align-self:flex-end; margin-bottom:3px; }
+.cort-tag { font-size:8px; color:var(--terra); letter-spacing:0.5px; margin-left:auto; align-self:flex-end; margin-bottom:4px; }
+.cort-advice { font-size:11px; color:var(--text-md); line-height:1.6; letter-spacing:0.2px; margin-top:6px; }
+
+/* Quick log buttons */
+.quick-log-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.btn-quick-log { padding:11px 14px; background:var(--fog); border:1px solid var(--ln-lt); font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-md); cursor:pointer; text-align:left; transition:all 0.2s; }
+.btn-quick-log:hover { border-color:var(--green); color:var(--green); }
+.btn-ql-sub { font-size:7.5px; color:var(--text-lt); letter-spacing:0.5px; margin-top:3px; display:block; }
+
+/* AI advice card */
+.advice-card { padding:14px 16px; background:var(--fog); border-left:1.5px solid var(--green); }
+.advice-card-hd { font-size:7.5px; letter-spacing:2px; text-transform:uppercase; color:var(--green-lt); margin-bottom:6px; }
+.advice-card-txt { font-size:12px; color:var(--text-md); line-height:1.75; }
+
+/* Recent logs */
+.rec-log-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--ln-lt); }
+.rec-log-row:last-child { border-bottom:none; }
+.rec-log-date { font-size:8px; letter-spacing:1px; color:var(--text-lt); width:36px; }
+.rec-log-icon { width:6px; height:6px; border-radius:50%; background:var(--green); flex-shrink:0; }
+.rec-log-icon.warn { background:var(--terra); }
+.rec-log-name { font-size:10px; color:var(--text-md); flex:1; }
+.rec-log-val { font-size:11px; font-weight:200; color:var(--text); letter-spacing:-0.3px; }
+
+/* ─── ANALYSIS SCREEN ─── */
+.ana-hdr { background:var(--green); padding:4px 24px 14px; display:flex; align-items:flex-end; justify-content:space-between; flex-shrink:0; }
+.wordmark { font-size:17px; font-weight:200; color:#fff; letter-spacing:9px; text-transform:uppercase; }
+.hdr-right { text-align:right; }
+.hdr-date { font-size:8px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.3); margin-bottom:2px; }
+.hdr-name { font-size:11px; color:rgba(255,255,255,0.6); letter-spacing:0.5px; }
+
+.score-band { background:var(--green); padding:6px 24px 0; flex-shrink:0; }
+.score-row { display:flex; align-items:baseline; margin-bottom:10px; }
+.score-num { font-size:54px; font-weight:100; color:#fff; letter-spacing:-3px; line-height:1; margin-right:6px; }
+.score-denom { font-size:11px; color:rgba(255,255,255,0.22); letter-spacing:1px; align-self:flex-end; margin-bottom:8px; }
+.score-lbl { font-size:8px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,0.25); margin-left:12px; align-self:flex-end; margin-bottom:9px; }
+.score-delta { margin-left:auto; font-size:10px; color:var(--terra-lt); letter-spacing:0.3px; align-self:center; }
+.score-track { height:1px; background:rgba(255,255,255,0.1); position:relative; margin-bottom:-1px; }
+.score-fill { height:100%; background:rgba(255,255,255,0.45); width:72%; }
+
+.tab-strip { background:var(--green); display:flex; padding:0 24px; border-bottom:1px solid rgba(255,255,255,0.07); flex-shrink:0; }
+.tab-btn { padding:11px 0; margin-right:28px; font-size:8px; letter-spacing:2.5px; text-transform:uppercase; color:rgba(255,255,255,0.28); background:none; border:none; border-bottom:1px solid transparent; cursor:pointer; transition:all 0.2s; }
+.tab-btn.active { color:#fff; border-bottom-color:rgba(255,255,255,0.65); }
+
+.ana-content { flex:1; overflow:hidden; position:relative; }
+.asec { position:absolute; inset:0; flex-direction:column; overflow-y:auto; display:none; }
+.asec.active { display:flex; }
+.asec::-webkit-scrollbar { display:none; }
+
+/* PHOTO AREA */
+.photo-area { position:relative; background:#181E1A; height:346px; overflow:hidden; flex-shrink:0; user-select:none; }
+.photo-area::before { content:''; position:absolute; top:16px; left:16px; width:16px; height:16px; border-top:1px solid rgba(255,255,255,0.25); border-left:1px solid rgba(255,255,255,0.25); z-index:8; pointer-events:none; }
+.photo-area::after { content:''; position:absolute; bottom:16px; right:16px; width:16px; height:16px; border-bottom:1px solid rgba(255,255,255,0.25); border-right:1px solid rgba(255,255,255,0.25); z-index:8; pointer-events:none; }
+.ov-toggles { position:absolute; top:14px; right:14px; display:flex; flex-direction:column; gap:3px; z-index:20; }
+.ov-btn { padding:5px 10px; background:rgba(245,242,236,0.84); border:none; font-size:7.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-md); cursor:pointer; backdrop-filter:blur(6px); transition:all 0.2s; }
+.ov-btn.active { background:var(--green); color:rgba(255,255,255,0.9); }
+.face-wrap { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+.photo-scan-info { position:absolute; bottom:14px; left:16px; z-index:10; pointer-events:none; }
+.scan-text { font-size:7.5px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,0.25); line-height:1.8; }
+.d-marker { position:absolute; cursor:pointer; z-index:30; transform:translate(-50%,-50%); }
+.d-dot { width:9px; height:9px; border-radius:50%; border:1px solid rgba(255,255,255,0.75); position:relative; transition:transform 0.15s; }
+.d-dot::after { content:''; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:3px; height:3px; background:rgba(255,255,255,0.85); border-radius:50%; }
+.d-marker:hover .d-dot,.d-marker.active .d-dot { transform:scale(1.55); border-color:#fff; }
+.d-lbl { position:absolute; font-size:7px; letter-spacing:1.8px; text-transform:uppercase; color:rgba(255,255,255,0.45); white-space:nowrap; pointer-events:none; }
+.d-line { position:absolute; top:50%; height:1px; background:rgba(255,255,255,0.25); transform:translateY(-50%); }
+
+.metrics-strip { display:grid; grid-template-columns:repeat(4,1fr); border-bottom:1px solid var(--ln-lt); flex-shrink:0; }
+.m-cell { padding:13px 8px; border-right:1px solid var(--ln-lt); text-align:center; }
+.m-cell:last-child { border-right:none; }
+.m-val { font-size:17px; font-weight:200; color:var(--text); letter-spacing:-0.5px; line-height:1.1; }
+.m-unit { font-size:8.5px; color:var(--text-lt); }
+.m-lbl { font-size:7.5px; letter-spacing:1.2px; text-transform:uppercase; color:var(--text-lt); margin-top:4px; }
+.m-d { font-size:7.5px; margin-top:2px; }
+.dp { color:var(--green-lt); } .dn { color:var(--terra); }
+
+.breakdown { padding:16px 24px; border-bottom:1px solid var(--ln-lt); flex-shrink:0; }
+.bd-head { font-size:8px; letter-spacing:2.5px; text-transform:uppercase; color:var(--text-lt); margin-bottom:13px; }
+.bd-row { display:flex; align-items:center; gap:9px; margin-bottom:8px; }
+.bd-row:last-child { margin-bottom:0; }
+.bd-lbl { font-size:8.5px; letter-spacing:0.8px; text-transform:uppercase; color:var(--text-md); width:42px; flex-shrink:0; }
+.bd-track { flex:1; height:1px; background:var(--ln-lt); position:relative; }
+.bd-fill { height:100%; background:var(--green); position:absolute; left:0; }
+.bd-fill.low { background:var(--terra); }
+.bd-val { font-size:10px; color:var(--text-md); width:20px; text-align:right; font-weight:300; }
+.bd-d { font-size:7.5px; width:22px; text-align:right; }
+
+.cta-row { padding:12px 24px; flex-shrink:0; }
+.btn-cta { width:100%; height:44px; background:var(--green); color:rgba(255,255,255,0.88); border:none; font-size:9px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:background 0.2s; }
+.btn-cta:active { background:var(--green-md); }
+
+/* COMPARE */
+.cmp-photo { position:relative; height:316px; background:#181E1A; overflow:hidden; flex-shrink:0; }
+.cmp-b,.cmp-a { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+.cmp-a { clip-path:inset(0 0 0 50%); }
+.cmp-div { position:absolute; top:0; bottom:0; left:50%; width:1px; background:rgba(255,255,255,0.45); z-index:5; }
+.cmp-hdl { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:28px; height:28px; border:1px solid rgba(255,255,255,0.55); background:rgba(18,26,20,0.6); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; font-size:9px; color:rgba(255,255,255,0.65); z-index:6; cursor:ew-resize; }
+.cmp-range { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:ew-resize; z-index:10; -webkit-appearance:none; }
+.cmp-lbl { position:absolute; bottom:12px; font-size:7.5px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.4); z-index:4; }
+.cmp-lbl-l { left:16px; } .cmp-lbl-r { right:16px; }
+.cmp-scores { display:grid; grid-template-columns:1fr 1fr 1fr; padding:18px 24px; border-bottom:1px solid var(--ln-lt); flex-shrink:0; }
+.cmp-sc-cell { text-align:center; padding:0 10px; border-right:1px solid var(--ln-lt); }
+.cmp-sc-cell:first-child { padding-left:0; } .cmp-sc-cell:last-child { border-right:none; padding-right:0; }
+.cmp-period { font-size:7.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-lt); margin-bottom:5px; }
+.cmp-score-num { font-size:30px; font-weight:200; color:var(--text); letter-spacing:-1.5px; line-height:1; }
+.cmp-score-num.now { color:var(--green); }
+.cmp-delta-row { font-size:9px; color:var(--green-lt); margin-top:3px; }
+.cmp-changes { padding:18px 24px; }
+.cmp-change-lbl { font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--text-lt); margin-bottom:12px; }
+.cmp-chg-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.cmp-chg-row:last-child { margin-bottom:0; }
+.cmp-chg-name { font-size:10px; color:var(--text-md); width:60px; }
+.cmp-track { flex:1; display:flex; gap:3px; height:2px; }
+.cmp-bar-b { height:100%; background:var(--fog-dk); } .cmp-bar-a { height:100%; background:var(--green); }
+.cmp-chg-val { font-size:9px; color:var(--terra); width:36px; text-align:right; }
+.cmp-chg-val.pos { color:var(--green-lt); }
+
+/* HISTORY */
+.hist-header { padding:18px 24px 14px; border-bottom:1px solid var(--ln-lt); flex-shrink:0; }
+.hist-eyebrow { font-size:8px; letter-spacing:3px; text-transform:uppercase; color:var(--text-lt); margin-bottom:4px; }
+.hist-title { font-size:18px; font-weight:300; color:var(--text); }
+.hist-sub { font-size:11px; color:var(--text-lt); margin-top:2px; }
+.hist-strip { display:flex; overflow-x:auto; flex-shrink:0; border-bottom:1px solid var(--ln-lt); }
+.hist-strip::-webkit-scrollbar { display:none; }
+.hist-item { flex-shrink:0; width:70px; padding:13px 10px; border-right:1px solid var(--ln-lt); cursor:pointer; transition:background 0.15s; }
+.hist-item:last-child { border-right:none; }
+.hist-item.active { background:var(--fog); }
+.hist-mo { font-size:7.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-lt); margin-bottom:7px; }
+.hist-thumb { width:50px; height:60px; background:var(--fog-dk); margin:0 auto 7px; border:1px solid transparent; overflow:hidden; }
+.hist-item.active .hist-thumb { border-color:var(--green); }
+.hist-sc { font-size:15px; font-weight:200; color:var(--text); text-align:center; }
+.hist-chg { font-size:7.5px; text-align:center; margin-top:2px; }
+.hist-chart { padding:18px 24px; border-bottom:1px solid var(--ln-lt); flex-shrink:0; }
+.hist-chart-lbl { font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--text-lt); margin-bottom:14px; }
+.hist-params { padding:18px 24px; }
+.hist-params-lbl { font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--text-lt); margin-bottom:12px; }
+.param-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--ln-lt); }
+.param-row:last-child { border-bottom:none; }
+.param-name { font-size:10px; color:var(--text-md); width:52px; }
+.param-track { flex:1; height:1px; background:var(--ln-lt); position:relative; }
+.param-fill { height:100%; background:var(--green); position:absolute; left:0; }
+.param-fill.low { background:var(--terra); }
+.param-val { font-size:11px; font-weight:200; color:var(--text); width:24px; text-align:right; }
+
+/* ─── RECORD SCREEN ─── */
+.rec-hdr { background:var(--green); padding:16px 24px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.rec-hdr-title { font-size:13px; font-weight:300; color:#fff; letter-spacing:2px; text-transform:uppercase; }
+.rec-hdr-date { font-size:8px; color:rgba(255,255,255,0.4); letter-spacing:1.5px; }
+
+.rec-tabs { background:var(--green); display:flex; padding:0 24px; border-bottom:1px solid rgba(255,255,255,0.08); flex-shrink:0; }
+.rec-tab-btn { padding:10px 0; margin-right:22px; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.3); background:none; border:none; border-bottom:1px solid transparent; cursor:pointer; transition:all 0.2s; }
+.rec-tab-btn.active { color:#fff; border-bottom-color:rgba(255,255,255,0.6); }
+
+.rec-body { flex:1; overflow-y:auto; }
+.rec-body::-webkit-scrollbar { display:none; }
+.rsec { display:none; }
+.rsec.active { display:block; }
+
+.rec-section { padding:18px 24px; border-bottom:1px solid var(--ln-lt); }
+.rec-sec-hd { font-size:8px; letter-spacing:2.5px; text-transform:uppercase; color:var(--text-lt); margin-bottom:14px; }
+
+/* Cortisol input */
+.cort-input-row { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+.cort-input-field { flex:1; height:44px; background:var(--fog); border:1px solid var(--ln); font-size:22px; font-weight:200; color:var(--text); letter-spacing:-0.5px; text-align:center; }
+.cort-input-field::placeholder { color:var(--text-lt); font-size:14px; font-weight:300; }
+.cort-unit-lbl { font-size:10px; color:var(--text-lt); letter-spacing:0.5px; }
+.btn-rec-log { height:44px; padding:0 18px; background:var(--green); color:rgba(255,255,255,0.88); border:none; font-size:9px; letter-spacing:2px; text-transform:uppercase; cursor:pointer; }
+
+.cort-hist-item { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--ln-lt); }
+.cort-hist-item:last-child { border-bottom:none; }
+.cort-hist-date { font-size:8.5px; color:var(--text-lt); letter-spacing:0.5px; width:44px; }
+.cort-hist-bar-wrap { flex:1; height:1px; background:var(--ln-lt); position:relative; }
+.cort-hist-bar { height:100%; background:var(--green); position:absolute; left:0; }
+.cort-hist-bar.high { background:var(--terra); }
+.cort-hist-val { font-size:12px; font-weight:200; color:var(--text); width:36px; text-align:right; letter-spacing:-0.3px; }
+.cort-hist-delta { font-size:8px; width:28px; text-align:right; }
+
+/* Skincare checklist */
+.care-time-lbl { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-md); margin-bottom:10px; }
+.care-check-item { display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--ln-lt); cursor:pointer; }
+.care-check-item:last-child { border-bottom:none; }
+.care-checkbox { width:14px; height:14px; border:1px solid var(--ln); flex-shrink:0; display:flex; align-items:center; justify-content:center; background:none; transition:all 0.15s; }
+.care-checkbox.checked { background:var(--green); border-color:var(--green); }
+.care-check-mark { font-size:8px; color:#fff; display:none; }
+.care-checkbox.checked .care-check-mark { display:block; }
+.care-item-name { font-size:11px; color:var(--text-md); flex:1; }
+.care-item-status { font-size:8px; color:var(--text-lt); letter-spacing:0.5px; }
+
+/* Lifestyle log */
+.life-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--ln-lt); border:1px solid var(--ln-lt); margin-bottom:14px; }
+.life-cell { background:var(--ivory); padding:13px 14px; }
+.life-cell-lbl { font-size:7.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-lt); margin-bottom:6px; }
+.life-cell-val { font-size:22px; font-weight:200; color:var(--text); letter-spacing:-0.5px; line-height:1; }
+.life-cell-unit { font-size:9px; color:var(--text-lt); }
+.life-cell-bar { height:1px; background:var(--ln-lt); margin-top:8px; position:relative; }
+.life-cell-fill { height:100%; background:var(--green); position:absolute; left:0; }
+.life-cell-fill.warn { background:var(--terra); }
+
+.life-log-btn { display:flex; align-items:center; gap:12px; padding:11px 14px; background:var(--fog); border:none; width:100%; cursor:pointer; border-bottom:1px solid var(--ln-lt); }
+.life-log-btn:last-child { border-bottom:none; }
+.llb-lbl { font-size:10px; color:var(--text-md); letter-spacing:0.5px; flex:1; text-align:left; }
+.llb-val { font-size:11px; font-weight:200; color:var(--text); }
+.llb-arr { font-size:10px; color:var(--text-lt); }
+
+/* ─── IMPROVE SCREEN ─── */
+.imp-hdr { background:var(--green); padding:16px 24px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.imp-hdr-title { font-size:13px; font-weight:300; color:#fff; letter-spacing:2px; text-transform:uppercase; }
+.imp-body { flex:1; overflow-y:auto; }
+.imp-body::-webkit-scrollbar { display:none; }
+
+.imp-section { padding:18px 24px; border-bottom:1px solid var(--ln-lt); }
+.imp-sec-hd { font-size:8px; letter-spacing:2.5px; text-transform:uppercase; color:var(--text-lt); margin-bottom:4px; }
+.imp-sec-sub { font-size:11px; color:var(--text-md); margin-bottom:14px; }
+
+/* Product cards */
+.product-card { padding:14px 0; border-bottom:1px solid var(--ln-lt); display:flex; gap:14px; align-items:flex-start; }
+.product-card:last-child { border-bottom:none; }
+.product-img { width:44px; height:54px; background:var(--fog-dk); flex-shrink:0; border:1px solid var(--ln-lt); display:flex; align-items:center; justify-content:center; }
+.product-img-letter { font-size:11px; color:var(--text-lt); letter-spacing:1px; }
+.product-info { flex:1; }
+.product-brand { font-size:7.5px; letter-spacing:2px; text-transform:uppercase; color:var(--text-lt); margin-bottom:3px; }
+.product-name { font-size:12px; font-weight:400; color:var(--text); line-height:1.4; margin-bottom:5px; }
+.product-reason { font-size:10px; color:var(--text-md); line-height:1.5; }
+.product-tag { display:inline-block; font-size:7px; letter-spacing:1px; text-transform:uppercase; color:var(--green-lt); border:1px solid var(--green-lt); padding:2px 6px; margin-top:5px; }
+
+/* Similar cases */
+.case-card { padding:14px 0; border-bottom:1px solid var(--ln-lt); }
+.case-card:last-child { border-bottom:none; }
+.case-hd { display:flex; align-items:baseline; gap:8px; margin-bottom:8px; }
+.case-profile { font-size:9px; letter-spacing:1px; color:var(--text-lt); text-transform:uppercase; }
+.case-score-change { font-size:10px; color:var(--green-lt); margin-left:auto; }
+.case-track { height:1px; background:var(--ln-lt); position:relative; margin-bottom:8px; }
+.case-bar-b { height:100%; background:var(--fog-dk); position:absolute; left:0; }
+.case-bar-a { height:100%; background:var(--green); position:absolute; left:0; }
+.case-key { font-size:10px; color:var(--text-md); line-height:1.6; }
+
+/* Action list */
+.action-item { display:flex; align-items:flex-start; gap:12px; padding:11px 0; border-bottom:1px solid var(--ln-lt); }
+.action-item:last-child { border-bottom:none; }
+.action-num { font-size:9px; color:var(--text-lt); letter-spacing:1px; width:16px; flex-shrink:0; margin-top:1px; }
+.action-content { flex:1; }
+.action-name { font-size:11px; color:var(--text); margin-bottom:2px; letter-spacing:0.2px; }
+.action-desc { font-size:9.5px; color:var(--text-lt); line-height:1.5; }
+.action-badge { font-size:7.5px; letter-spacing:1px; text-transform:uppercase; margin-top:4px; display:inline-block; }
+.badge-green { color:var(--green-lt); }
+.badge-terra { color:var(--terra); }
+
+/* Progress bar */
+.progress-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--ln-lt); }
+.progress-row:last-child { border-bottom:none; }
+.progress-name { font-size:10px; color:var(--text-md); width:52px; }
+.progress-track { flex:1; height:1px; background:var(--ln-lt); position:relative; }
+.progress-fill { height:100%; background:var(--green); position:absolute; left:0; }
+.progress-val { font-size:11px; font-weight:200; color:var(--text); width:24px; text-align:right; }
+.progress-chg { font-size:8px; color:var(--green-lt); width:24px; text-align:right; }
+
+/* ─── BOTTOM SHEET ─── */
+.sh-overlay { position:absolute; inset:0; background:rgba(24,24,20,0.52); z-index:50; opacity:0; pointer-events:none; transition:opacity 0.25s; }
+.sh-overlay.open { opacity:1; pointer-events:all; }
+.btm-sheet { position:absolute; left:0; right:0; bottom:0; background:var(--ivory); border-top:1px solid var(--ln); z-index:51; transform:translateY(100%); transition:transform 0.32s cubic-bezier(0.4,0,0.2,1); max-height:85%; display:flex; flex-direction:column; }
+.btm-sheet.open { transform:translateY(0); }
+.sh-handle { width:22px; height:1px; background:var(--ln); margin:14px auto 12px; flex-shrink:0; }
+.sh-hd { padding:0 24px 16px; border-bottom:1px solid var(--ln-lt); display:flex; align-items:flex-end; justify-content:space-between; flex-shrink:0; }
+.sh-eyebrow { font-size:7.5px; letter-spacing:2.5px; text-transform:uppercase; color:var(--text-lt); margin-bottom:4px; }
+.sh-title { font-size:22px; font-weight:200; color:var(--text); letter-spacing:1px; }
+.sh-close { width:26px; height:26px; background:none; border:1px solid var(--ln); display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--text-md); cursor:pointer; }
+.sh-body { flex:1; overflow-y:auto; padding:18px 24px 24px; }
+.sh-body::-webkit-scrollbar { display:none; }
+.sh-metrics { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--ln-lt); border:1px solid var(--ln-lt); margin-bottom:22px; }
+.sh-m { background:var(--ivory); padding:13px 15px; }
+.shm-l { font-size:7.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-lt); margin-bottom:6px; }
+.shm-v { font-size:26px; font-weight:200; color:var(--text); letter-spacing:-1px; line-height:1; }
+.shm-u { font-size:9.5px; color:var(--text-lt); }
+.shm-track { height:1px; background:var(--ln-lt); margin-top:9px; position:relative; }
+.shm-fill { height:100%; background:var(--green); position:absolute; left:0; }
+.shm-fill.warm { background:var(--terra); }
+.sh-sec { font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--text-lt); margin-bottom:12px; }
+.sh-advice { padding:13px 15px; background:var(--fog); border-left:1.5px solid var(--green); margin-bottom:14px; }
+.sh-advice-txt { font-size:12px; color:var(--text-md); line-height:1.75; }
+.btn-adv { width:100%; height:42px; background:none; border:1px solid var(--green); color:var(--green); font-size:8.5px; letter-spacing:2.5px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; }
+.btn-adv:hover { background:var(--green); color:#fff; }
+.sh-disc { font-size:8.5px; color:var(--text-lt); line-height:1.6; text-align:center; margin-top:14px; }
+</style>
+</head>
+<body>
+<div id="phone">
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <span>9:41</span>
+  <span style="letter-spacing:2px">●●●</span>
+</div>
+
+<!-- ████████ MAIN CONTENT ████████ -->
+<div id="content">
+
+<!-- ════════════════════════════════
+     HOME SCREEN
+════════════════════════════════ -->
+<div class="screen-sec active" id="screen-home">
+
+  <!-- Header -->
+  <div class="home-hdr">
+    <div class="home-wordmark">RINZME</div>
+    <div class="home-profile">
+      <div>
+        <div class="home-profile-date">2026.07.29</div>
+        <div class="home-profile-name">山田 さくら</div>
+      </div>
+      <div class="home-avatar">山</div>
+    </div>
+  </div>
+
+  <!-- Hero score -->
+  <div class="home-hero">
+    <div class="home-score-row">
+      <div class="home-score-num">72</div>
+      <div class="home-score-info">
+        <div class="home-score-lbl">Skin Score</div>
+        <div class="home-score-status">良好な改善傾向</div>
+      </div>
+      <div class="home-score-delta">▲ 5 vs 先月</div>
+    </div>
+    <div class="home-track"><div class="home-fill" style="width:72%"></div></div>
+    <div class="home-scan-row" style="margin-top:14px">
+      <div class="home-scan-info">Last analysis · 2026.07.29</div>
+      <button class="btn-goto-analysis" onclick="navTo('analysis')">診断結果を見る →</button>
+    </div>
+  </div>
+
+  <!-- Quick metrics (US-002: コルチゾール表示) -->
+  <div class="home-metrics">
+    <div class="hm-cell">
+      <div class="hm-val">45<span class="hm-unit">%</span></div>
+      <div class="hm-lbl">水分</div>
+      <div class="hm-d dn">▼ 3%</div>
+    </div>
+    <div class="hm-cell">
+      <div class="hm-val">14.2<span class="hm-unit"> μg</span></div>
+      <div class="hm-lbl">コルチゾール</div>
+      <div class="hm-d dn">▲ 1.2</div>
+    </div>
+    <div class="hm-cell">
+      <div class="hm-val">6.1<span class="hm-unit">h</span></div>
+      <div class="hm-lbl">睡眠</div>
+      <div class="hm-d dn">▼ 0.4h</div>
+    </div>
+    <div class="hm-cell">
+      <div class="hm-val">52<span class="hm-unit">ms</span></div>
+      <div class="hm-lbl">HRV</div>
+      <div class="hm-d" style="color:var(--text-lt)">— 0</div>
+    </div>
+  </div>
+
+  <!-- Cortisol section (US-003, US-004) -->
+  <div class="home-section">
+    <div class="home-sec-hd">Cortisol Trend</div>
+    <div class="cort-mini">
+      <div class="cort-val-large">14.2</div>
+      <div class="cort-unit">μg/dL</div>
+      <div class="cort-tag">やや高め</div>
+    </div>
+    <svg viewBox="0 0 330 52" width="100%" style="display:block;margin-top:8px">
+      <line x1="0" y1="38" x2="330" y2="38" stroke="var(--ln-lt)" stroke-width="1"/>
+      <line x1="0" y1="20" x2="330" y2="20" stroke="var(--ln-lt)" stroke-width="0.5" stroke-dasharray="3,3"/>
+      <!-- values: 11.2, 12.0, 13.5, 11.8, 13.0, 14.2 mapped to y=28→10 -->
+      <polyline points="10,28 76,25 142,18 208,23 274,20 318,14"
+        fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <polygon points="10,28 76,25 142,18 208,23 274,20 318,14 318,38 10,38"
+        fill="var(--green)" opacity="0.06"/>
+      <circle cx="318" cy="14" r="3.5" fill="var(--text)" stroke="var(--green)" stroke-width="1.5"/>
+      <text x="10"  y="50" font-size="7.5" fill="var(--text-lt)" text-anchor="middle">Feb</text>
+      <text x="76"  y="50" font-size="7.5" fill="var(--text-lt)" text-anchor="middle">Mar</text>
+      <text x="142" y="50" font-size="7.5" fill="var(--text-lt)" text-anchor="middle">Apr</text>
+      <text x="208" y="50" font-size="7.5" fill="var(--text-lt)" text-anchor="middle">May</text>
+      <text x="274" y="50" font-size="7.5" fill="var(--text-lt)" text-anchor="middle">Jun</text>
+      <text x="318" y="50" font-size="7.5" fill="var(--green)" text-anchor="middle">Jul</text>
+    </svg>
+    <div class="cort-advice">高コルチゾール値が続くと肌バリアが低下しやすくなります。今月は睡眠時間の確保と刺激物の制限を意識しましょう。</div>
+  </div>
+
+  <!-- Quick log (US-001, US-002) -->
+  <div class="home-section">
+    <div class="home-sec-hd">今日の記録</div>
+    <div class="quick-log-grid">
+      <button class="btn-quick-log" onclick="navTo('record'); setRecTab('cortisol')">
+        コルチゾール
+        <span class="btn-ql-sub">最終測定 · 2日前</span>
+      </button>
+      <button class="btn-quick-log" onclick="navTo('record'); setRecTab('care')">
+        スキンケア
+        <span class="btn-ql-sub">今日: 朝ケア済み</span>
+      </button>
+      <button class="btn-quick-log" onclick="navTo('record'); setRecTab('life')">
+        生活データ
+        <span class="btn-ql-sub">睡眠 · 食事 · 運動</span>
+      </button>
+      <button class="btn-quick-log" onclick="navTo('improve')">
+        改善プラン
+        <span class="btn-ql-sub">3項目が未完了</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- AI Advice (US-007) -->
+  <div class="home-section" style="border-bottom:none">
+    <div class="home-sec-hd">Today's Insight</div>
+    <div class="advice-card">
+      <div class="advice-card-hd">AI Analysis · Personalized</div>
+      <div class="advice-card-txt">今月の右頬の赤みスコアが前月比+23改善しています。引き続きセラミド系保湿を毎朝継続し、紫外線対策を徹底しましょう。コルチゾール値がやや高い傾向があるため、睡眠の質改善が次の課題です。</div>
+    </div>
+    <button class="btn-cta" style="margin-top:12px" onclick="navTo('improve')">改善プランを見る →</button>
+  </div>
+
+  <div style="height:12px"></div>
+</div><!-- /screen-home -->
+
+
+<!-- ════════════════════════════════
+     ANALYSIS SCREEN
+════════════════════════════════ -->
+<div class="screen-sec" id="screen-analysis">
+
+  <!-- Analysis own header -->
+  <div class="ana-hdr">
+    <div class="wordmark">RINZME</div>
+    <div class="hdr-right">
+      <div class="hdr-date">2026.07.29</div>
+      <div class="hdr-name">山田 さくら</div>
+    </div>
+  </div>
+  <div class="score-band">
+    <div class="score-row">
+      <div class="score-num">72</div>
+      <div class="score-denom">/ 100</div>
+      <div class="score-lbl">Skin Score</div>
+      <div class="score-delta">▲ 5 vs Last Month</div>
+    </div>
+    <div class="score-track"><div class="score-fill"></div></div>
+  </div>
+  <div class="tab-strip">
+    <button class="tab-btn active" onclick="setAnalysisTab('photo')">Analysis</button>
+    <button class="tab-btn" onclick="setAnalysisTab('compare')">Compare</button>
+    <button class="tab-btn" onclick="setAnalysisTab('history')">History</button>
+  </div>
+
+  <!-- Internal content area -->
+  <div class="ana-content">
+
+    <!-- ── Photo analysis tab ── -->
+    <div class="asec active" id="asec-photo">
+      <div class="photo-area">
+        <div class="ov-toggles">
+          <button class="ov-btn" id="btn-off" onclick="setOverlay(null)">Off</button>
+          <button class="ov-btn" id="btn-red" onclick="setOverlay('red')">赤み</button>
+          <button class="ov-btn" id="btn-pore" onclick="setOverlay('pore')">毛穴</button>
+          <button class="ov-btn" id="btn-shine" onclick="setOverlay('shine')">テカリ</button>
+          <button class="ov-btn" id="btn-map" onclick="setOverlay('map')">総合</button>
+        </div>
+
+        <div class="face-wrap" style="position:absolute;inset:0">
+          <img src="../src/reference_doc/モック画面face.png"
+            style="position:absolute;width:100%;height:100%;object-fit:cover;object-position:center 8%"
+            alt="肌診断写真"/>
+          <svg viewBox="0 0 390 346" width="390" height="346"
+            style="position:absolute;inset:0;pointer-events:none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="hm-redL" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#CC3830" stop-opacity="0.52"/>
+                <stop offset="65%" stop-color="#CC3830" stop-opacity="0.15"/>
+                <stop offset="100%" stop-color="#CC3830" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="hm-redR" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#CC3830" stop-opacity="0.52"/>
+                <stop offset="65%" stop-color="#CC3830" stop-opacity="0.15"/>
+                <stop offset="100%" stop-color="#CC3830" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="hm-shine" cx="50%" cy="15%" r="80%">
+                <stop offset="0%" stop-color="#D4B830" stop-opacity="0.48"/>
+                <stop offset="100%" stop-color="#D4B830" stop-opacity="0"/>
+              </radialGradient>
+              <radialGradient id="hm-poreF" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#6850A0" stop-opacity="0.3"/>
+                <stop offset="100%" stop-color="#6850A0" stop-opacity="0"/>
+              </radialGradient>
+              <pattern id="dotPat" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
+                <circle cx="3" cy="3" r="0.85" fill="#5840A0" opacity="0.55"/>
+              </pattern>
+              <clipPath id="fc"><ellipse cx="195" cy="195" rx="112" ry="130"/></clipPath>
+            </defs>
+            <g id="ov-red" style="opacity:0;transition:opacity 0.35s">
+              <ellipse cx="112" cy="205" rx="60" ry="44" fill="url(#hm-redL)"/>
+              <ellipse cx="278" cy="205" rx="60" ry="44" fill="url(#hm-redR)"/>
+            </g>
+            <g id="ov-pore" clip-path="url(#fc)" style="opacity:0;transition:opacity 0.35s">
+              <rect x="83" y="65" width="224" height="260" fill="url(#dotPat)"/>
+              <ellipse cx="195" cy="195" rx="112" ry="130" fill="url(#hm-poreF)"/>
+            </g>
+            <g id="ov-shine" style="opacity:0;transition:opacity 0.35s">
+              <ellipse cx="195" cy="152" rx="34" ry="72" fill="url(#hm-shine)"/>
+            </g>
+            <g id="ov-map" style="opacity:0;transition:opacity 0.35s">
+              <ellipse cx="112" cy="205" rx="55" ry="40" fill="url(#hm-redL)" opacity="0.75"/>
+              <ellipse cx="278" cy="205" rx="55" ry="40" fill="url(#hm-redR)" opacity="0.75"/>
+              <ellipse cx="195" cy="152" rx="30" ry="64" fill="url(#hm-shine)" opacity="0.8"/>
+              <g clip-path="url(#fc)">
+                <rect x="83" y="65" width="224" height="260" fill="url(#dotPat)" opacity="0.45"/>
+              </g>
+            </g>
+          </svg>
+        </div>
+
+        <div class="d-marker" id="mk-rcheek" style="top:58%;left:29%" onclick="openMarker('rcheek')">
+          <div class="d-dot"></div>
+          <div class="d-line" style="right:9px;width:22px"></div>
+          <div class="d-lbl" style="right:32px;top:-3px">右頬</div>
+        </div>
+        <div class="d-marker" id="mk-lcheek" style="top:58%;left:71%" onclick="openMarker('lcheek')">
+          <div class="d-dot"></div>
+          <div class="d-line" style="left:9px;width:22px"></div>
+          <div class="d-lbl" style="left:32px;top:-3px">左頬</div>
+        </div>
+        <div class="d-marker" id="mk-tzone" style="top:50%;left:50%" onclick="openMarker('tzone')">
+          <div class="d-dot"></div>
+          <div class="d-line" style="left:9px;width:20px"></div>
+          <div class="d-lbl" style="left:30px;top:-3px">T Zone</div>
+        </div>
+        <div class="d-marker" id="mk-eye" style="top:39%;left:50%" onclick="openMarker('eye')">
+          <div class="d-dot"></div>
+          <div class="d-line" style="right:9px;width:18px"></div>
+          <div class="d-lbl" style="right:28px;top:-3px">目周り</div>
+        </div>
+        <div class="d-marker" id="mk-chin" style="top:82%;left:50%" onclick="openMarker('chin')">
+          <div class="d-dot"></div>
+          <div class="d-line" style="left:9px;width:22px"></div>
+          <div class="d-lbl" style="left:32px;top:-3px">あご</div>
+        </div>
+        <div class="photo-scan-info">
+          <div class="scan-text">Skin Analysis 2026.07.29</div>
+          <div class="scan-text">Resolution: 12MP · AI Model v3.2</div>
+        </div>
+      </div><!-- /photo-area -->
+
+      <div class="metrics-strip">
+        <div class="m-cell"><div class="m-val">45<span class="m-unit">%</span></div><div class="m-lbl">水分</div><div class="m-d dn">▼ 3%</div></div>
+        <div class="m-cell"><div class="m-val">14.2<span class="m-unit"> μg</span></div><div class="m-lbl">コルチゾール</div><div class="m-d dn">▲ 1.2</div></div>
+        <div class="m-cell"><div class="m-val">6.1<span class="m-unit">h</span></div><div class="m-lbl">睡眠</div><div class="m-d dn">▼ 0.4h</div></div>
+        <div class="m-cell"><div class="m-val">52<span class="m-unit">ms</span></div><div class="m-lbl">HRV</div><div class="m-d" style="color:var(--text-lt)">— 0</div></div>
+      </div>
+      <div class="breakdown">
+        <div class="bd-head">Score Breakdown</div>
+        <div class="bd-row"><div class="bd-lbl">赤み</div><div class="bd-track"><div class="bd-fill" style="width:78%"></div></div><div class="bd-val">78</div><div class="bd-d dp">▲8</div></div>
+        <div class="bd-row"><div class="bd-lbl">シミ</div><div class="bd-track"><div class="bd-fill" style="width:66%"></div></div><div class="bd-val">66</div><div class="bd-d dp">▲2</div></div>
+        <div class="bd-row"><div class="bd-lbl">毛穴</div><div class="bd-track"><div class="bd-fill" style="width:60%"></div></div><div class="bd-val">60</div><div class="bd-d" style="color:var(--text-lt)">—</div></div>
+        <div class="bd-row"><div class="bd-lbl">乾燥</div><div class="bd-track"><div class="bd-fill low" style="width:55%"></div></div><div class="bd-val">55</div><div class="bd-d dn">▼3</div></div>
+        <div class="bd-row"><div class="bd-lbl">テカリ</div><div class="bd-track"><div class="bd-fill" style="width:80%"></div></div><div class="bd-val">80</div><div class="bd-d dp">▲6</div></div>
+        <div class="bd-row"><div class="bd-lbl">シワ</div><div class="bd-track"><div class="bd-fill" style="width:75%"></div></div><div class="bd-val">75</div><div class="bd-d dp">▲1</div></div>
+      </div>
+      <div class="cta-row">
+        <button class="btn-cta" onclick="navTo('improve')">改善プランを見る →</button>
+      </div>
+      <div style="height:8px"></div>
+    </div><!-- /asec-photo -->
+
+    <!-- ── Compare tab ── -->
+    <div class="asec" id="asec-compare">
+      <div class="cmp-photo" id="cmpWrap">
+        <div class="cmp-b">
+          <img src="../src/reference_doc/モック画面face.png"
+            style="position:absolute;width:100%;height:100%;object-fit:cover;object-position:center 8%;filter:contrast(1.06) saturate(1.3) brightness(0.97)" alt="先月"/>
+          <svg viewBox="0 0 390 316" width="390" height="316" style="position:absolute;inset:0;pointer-events:none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="bfRedL" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#CC3830" stop-opacity="0.45"/><stop offset="100%" stop-color="#CC3830" stop-opacity="0"/></radialGradient>
+              <radialGradient id="bfRedR" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#CC3830" stop-opacity="0.45"/><stop offset="100%" stop-color="#CC3830" stop-opacity="0"/></radialGradient>
+            </defs>
+            <ellipse cx="112" cy="195" rx="62" ry="46" fill="url(#bfRedL)"/>
+            <ellipse cx="278" cy="195" rx="62" ry="46" fill="url(#bfRedR)"/>
+          </svg>
+        </div>
+        <div class="cmp-a" id="cmpAfter">
+          <img src="../src/reference_doc/モック画面face.png"
+            style="position:absolute;width:100%;height:100%;object-fit:cover;object-position:center 8%;filter:contrast(0.97) saturate(0.9) brightness(1.02)" alt="今月"/>
+        </div>
+        <div class="cmp-div" id="cmpDiv"></div>
+        <div class="cmp-hdl" id="cmpHdl">◁▷</div>
+        <div class="cmp-lbl cmp-lbl-l">先月</div>
+        <div class="cmp-lbl cmp-lbl-r">今月</div>
+        <input type="range" class="cmp-range" id="cmpRange" min="0" max="100" value="50"/>
+      </div>
+      <div class="cmp-scores">
+        <div class="cmp-sc-cell"><div class="cmp-period">Jun 2026</div><div class="cmp-score-num">60</div></div>
+        <div class="cmp-sc-cell" style="display:flex;align-items:center;justify-content:center"><div style="font-size:14px;color:var(--text-lt);font-weight:200">→</div></div>
+        <div class="cmp-sc-cell"><div class="cmp-period">Jul 2026</div><div class="cmp-score-num now">72</div><div class="cmp-delta-row">▲ 12 pts</div></div>
+      </div>
+      <div class="cmp-changes">
+        <div class="cmp-change-lbl">Key Changes</div>
+        <div class="cmp-chg-row"><div class="cmp-chg-name">赤み</div><div class="cmp-track"><div class="cmp-bar-b" style="flex:0.55"></div><div class="cmp-bar-a" style="flex:0.78"></div></div><div class="cmp-chg-val pos">▲ 23</div></div>
+        <div class="cmp-chg-row"><div class="cmp-chg-name">テカリ</div><div class="cmp-track"><div class="cmp-bar-b" style="flex:0.60"></div><div class="cmp-bar-a" style="flex:0.80"></div></div><div class="cmp-chg-val pos">▲ 20</div></div>
+        <div class="cmp-chg-row"><div class="cmp-chg-name">乾燥</div><div class="cmp-track"><div class="cmp-bar-b" style="flex:0.62"></div><div class="cmp-bar-a" style="flex:0.55"></div></div><div class="cmp-chg-val">▼ 7</div></div>
+        <div class="cmp-chg-row"><div class="cmp-chg-name">毛穴</div><div class="cmp-track"><div class="cmp-bar-b" style="flex:0.60"></div><div class="cmp-bar-a" style="flex:0.60"></div></div><div class="cmp-chg-val" style="color:var(--text-lt)">— 0</div></div>
+      </div>
+      <div style="height:12px"></div>
+    </div><!-- /asec-compare -->
+
+    <!-- ── History tab (US-011) ── -->
+    <div class="asec" id="asec-history">
+      <div class="hist-header"><div class="hist-eyebrow">Diagnostic History</div><div class="hist-title">6ヶ月の肌記録</div><div class="hist-sub">2026年2月 — 7月</div></div>
+      <div class="hist-strip">
+        <div class="hist-item" onclick="selectHist(this)"><div class="hist-mo">Feb</div><div class="hist-thumb"><img src="../src/reference_doc/モック画面face.png" style="width:100%;height:100%;object-fit:cover;object-position:center 12%;filter:saturate(1.35) contrast(1.06) brightness(0.94)"/></div><div class="hist-sc">58</div><div class="hist-chg" style="color:var(--text-lt)">—</div></div>
+        <div class="hist-item" onclick="selectHist(this)"><div class="hist-mo">Mar</div><div class="hist-thumb"><img src="../src/reference_doc/モック画面face.png" style="width:100%;height:100%;object-fit:cover;object-position:center 12%;filter:saturate(1.28) contrast(1.04) brightness(0.96)"/></div><div class="hist-sc">60</div><div class="hist-chg dp">▲2</div></div>
+        <div class="hist-item" onclick="selectHist(this)"><div class="hist-mo">Apr</div><div class="hist-thumb"><img src="../src/reference_doc/モック画面face.png" style="width:100%;height:100%;object-fit:cover;object-position:center 12%;filter:saturate(1.38) contrast(1.07) brightness(0.93)"/></div><div class="hist-sc">55</div><div class="hist-chg dn">▼5</div></div>
+        <div class="hist-item" onclick="selectHist(this)"><div class="hist-mo">May</div><div class="hist-thumb"><img src="../src/reference_doc/モック画面face.png" style="width:100%;height:100%;object-fit:cover;object-position:center 12%;filter:saturate(1.15) contrast(1.02) brightness(0.98)"/></div><div class="hist-sc">63</div><div class="hist-chg dp">▲8</div></div>
+        <div class="hist-item" onclick="selectHist(this)"><div class="hist-mo">Jun</div><div class="hist-thumb"><img src="../src/reference_doc/モック画面face.png" style="width:100%;height:100%;object-fit:cover;object-position:center 12%;filter:saturate(1.22) contrast(1.03) brightness(0.97)"/></div><div class="hist-sc">60</div><div class="hist-chg dn">▼3</div></div>
+        <div class="hist-item active" onclick="selectHist(this)"><div class="hist-mo">Jul</div><div class="hist-thumb"><img src="../src/reference_doc/モック画面face.png" style="width:100%;height:100%;object-fit:cover;object-position:center 12%;filter:saturate(0.92) contrast(0.97) brightness(1.03)"/></div><div class="hist-sc" style="color:var(--green)">72</div><div class="hist-chg dp">▲12</div></div>
+      </div>
+      <div class="hist-chart">
+        <div class="hist-chart-lbl">Score Trend — 6 Months</div>
+        <svg viewBox="0 0 330 90" width="100%" style="display:block">
+          <line x1="28" y1="8"  x2="318" y2="8"  stroke="var(--ln-lt)" stroke-width="1"/>
+          <line x1="28" y1="30" x2="318" y2="30" stroke="var(--ln-lt)" stroke-width="1"/>
+          <line x1="28" y1="52" x2="318" y2="52" stroke="var(--ln-lt)" stroke-width="1"/>
+          <line x1="28" y1="74" x2="318" y2="74" stroke="var(--ln-lt)" stroke-width="1"/>
+          <text x="22" y="12" font-size="8" fill="var(--text-lt)" text-anchor="end">100</text>
+          <text x="22" y="34" font-size="8" fill="var(--text-lt)" text-anchor="end">75</text>
+          <text x="22" y="56" font-size="8" fill="var(--text-lt)" text-anchor="end">50</text>
+          <text x="22" y="78" font-size="8" fill="var(--text-lt)" text-anchor="end">25</text>
+          <polygon points="52,65 104,63 156,69 208,60 260,63 310,49 310,74 52,74" fill="var(--green)" opacity="0.08"/>
+          <polyline points="52,65 104,63 156,69 208,60 260,63 310,49" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="52"  cy="65" r="3" fill="var(--green)" stroke="var(--ivory)" stroke-width="1.5"/>
+          <circle cx="104" cy="63" r="3" fill="var(--green)" stroke="var(--ivory)" stroke-width="1.5"/>
+          <circle cx="156" cy="69" r="3" fill="var(--green)" stroke="var(--ivory)" stroke-width="1.5"/>
+          <circle cx="208" cy="60" r="3" fill="var(--green)" stroke="var(--ivory)" stroke-width="1.5"/>
+          <circle cx="260" cy="63" r="3" fill="var(--green)" stroke="var(--ivory)" stroke-width="1.5"/>
+          <circle cx="310" cy="49" r="4.5" fill="var(--text)" stroke="var(--green)" stroke-width="2"/>
+          <text x="52"  y="86" font-size="8" fill="var(--text-lt)" text-anchor="middle">Feb</text>
+          <text x="104" y="86" font-size="8" fill="var(--text-lt)" text-anchor="middle">Mar</text>
+          <text x="156" y="86" font-size="8" fill="var(--text-lt)" text-anchor="middle">Apr</text>
+          <text x="208" y="86" font-size="8" fill="var(--text-lt)" text-anchor="middle">May</text>
+          <text x="260" y="86" font-size="8" fill="var(--text-lt)" text-anchor="middle">Jun</text>
+          <text x="310" y="86" font-size="8" fill="var(--green)" text-anchor="middle">Jul</text>
+          <rect x="291" y="33" width="28" height="13" fill="var(--text)"/>
+          <text x="305" y="43" font-size="9" fill="#fff" text-anchor="middle">72</text>
+        </svg>
+      </div>
+      <div class="hist-params">
+        <div class="hist-params-lbl">Current Parameters</div>
+        <div class="param-row"><div class="param-name">赤み</div><div class="param-track"><div class="param-fill" style="width:78%"></div></div><div class="param-val">78</div></div>
+        <div class="param-row"><div class="param-name">毛穴</div><div class="param-track"><div class="param-fill" style="width:60%"></div></div><div class="param-val">60</div></div>
+        <div class="param-row"><div class="param-name">テカリ</div><div class="param-track"><div class="param-fill" style="width:80%"></div></div><div class="param-val">80</div></div>
+        <div class="param-row"><div class="param-name">乾燥</div><div class="param-track"><div class="param-fill low" style="width:55%"></div></div><div class="param-val">55</div></div>
+        <div class="param-row"><div class="param-name">シミ</div><div class="param-track"><div class="param-fill" style="width:66%"></div></div><div class="param-val">66</div></div>
+        <div class="param-row"><div class="param-name">シワ</div><div class="param-track"><div class="param-fill" style="width:75%"></div></div><div class="param-val">75</div></div>
+      </div>
+      <div style="height:12px"></div>
+    </div><!-- /asec-history -->
+
+  </div><!-- /ana-content -->
+</div><!-- /screen-analysis -->
+
+
+<!-- ════════════════════════════════
+     RECORD SCREEN (US-001, 002, 005, 006)
+════════════════════════════════ -->
+<div class="screen-sec" id="screen-record">
+  <div class="rec-hdr">
+    <div class="rec-hdr-title">記録する</div>
+    <div class="rec-hdr-date">2026.07.29</div>
+  </div>
+  <div class="rec-tabs">
+    <button class="rec-tab-btn active" id="rtab-cortisol" onclick="setRecTab('cortisol')">コルチゾール</button>
+    <button class="rec-tab-btn" id="rtab-care" onclick="setRecTab('care')">スキンケア</button>
+    <button class="rec-tab-btn" id="rtab-life" onclick="setRecTab('life')">生活記録</button>
+  </div>
+  <div class="rec-body">
+
+    <!-- Cortisol tab (US-002, US-003) -->
+    <div class="rsec active" id="rsec-cortisol">
+      <div class="rec-section">
+        <div class="rec-sec-hd">Cortisol Measurement · 今日の測定値を入力</div>
+        <div class="cort-input-row">
+          <input class="cort-input-field" type="number" placeholder="0.0" step="0.1"/>
+          <div class="cort-unit-lbl">μg/dL</div>
+          <button class="btn-rec-log">記録</button>
+        </div>
+        <div style="font-size:9px;color:var(--text-lt);letter-spacing:0.3px;margin-bottom:4px">通常値: 5.0–20.0 μg/dL（午前）</div>
+      </div>
+      <div class="rec-section">
+        <div class="rec-sec-hd">Recent Measurements (US-003)</div>
+        <div class="cort-hist-item">
+          <div class="cort-hist-date">07.29</div>
+          <div class="cort-hist-bar-wrap"><div class="cort-hist-bar high" style="width:68%"></div></div>
+          <div class="cort-hist-val">14.2</div>
+          <div class="cort-hist-delta dn" style="font-size:8px">▲1.2</div>
+        </div>
+        <div class="cort-hist-item">
+          <div class="cort-hist-date">07.22</div>
+          <div class="cort-hist-bar-wrap"><div class="cort-hist-bar" style="width:62%"></div></div>
+          <div class="cort-hist-val">13.0</div>
+          <div class="cort-hist-delta dp" style="font-size:8px">▲0.8</div>
+        </div>
+        <div class="cort-hist-item">
+          <div class="cort-hist-date">07.15</div>
+          <div class="cort-hist-bar-wrap"><div class="cort-hist-bar" style="width:58%"></div></div>
+          <div class="cort-hist-val">12.2</div>
+          <div class="cort-hist-delta dn" style="font-size:8px">▲1.4</div>
+        </div>
+        <div class="cort-hist-item">
+          <div class="cort-hist-date">07.08</div>
+          <div class="cort-hist-bar-wrap"><div class="cort-hist-bar" style="width:52%"></div></div>
+          <div class="cort-hist-val">10.8</div>
+          <div class="cort-hist-delta dp" style="font-size:8px">▼1.2</div>
+        </div>
+        <div class="cort-hist-item">
+          <div class="cort-hist-date">07.01</div>
+          <div class="cort-hist-bar-wrap"><div class="cort-hist-bar" style="width:60%"></div></div>
+          <div class="cort-hist-val">12.0</div>
+          <div class="cort-hist-delta" style="font-size:8px;color:var(--text-lt)">—</div>
+        </div>
+      </div>
+      <div class="rec-section" style="border-bottom:none">
+        <div class="rec-sec-hd">Insight (US-007)</div>
+        <div class="advice-card">
+          <div class="advice-card-hd">Cortisol Analysis</div>
+          <div class="advice-card-txt">今月のコルチゾール値は上昇傾向にあります。高コルチゾール状態が続くと、肌のコラーゲン生成が低下し、乾燥や赤みが悪化する可能性があります。睡眠の質改善（就寝前1時間のスクリーンタイム削減）が効果的です。</div>
+        </div>
+      </div>
+    </div><!-- /rsec-cortisol -->
+
+    <!-- Skincare tab (US-006) -->
+    <div class="rsec" id="rsec-care">
+      <div class="rec-section">
+        <div class="rec-sec-hd">Morning Routine · 朝のスキンケア</div>
+        <div class="care-time-lbl">朝ケア</div>
+        <div class="care-check-item" onclick="toggleCheck(this)">
+          <div class="care-checkbox checked"><div class="care-check-mark">✓</div></div>
+          <div class="care-item-name">洗顔</div>
+          <div class="care-item-status">DONE</div>
+        </div>
+        <div class="care-check-item" onclick="toggleCheck(this)">
+          <div class="care-checkbox checked"><div class="care-check-mark">✓</div></div>
+          <div class="care-item-name">化粧水（セラミド系）</div>
+          <div class="care-item-status">DONE</div>
+        </div>
+        <div class="care-check-item" onclick="toggleCheck(this)">
+          <div class="care-checkbox"><div class="care-check-mark">✓</div></div>
+          <div class="care-item-name">美容液</div>
+          <div class="care-item-status" style="color:var(--text-lt)">—</div>
+        </div>
+        <div class="care-check-item" onclick="toggleCheck(this)">
+          <div class="care-checkbox"><div class="care-check-mark">✓</div></div>
+          <div class="care-item-name">日焼け止め SPF50+</div>
+          <div class="care-item-status" style="color:var(--text-lt)">—</div>
+        </div>
+      </div>
+      <div class="rec-section" style="border-bottom:none">
+        <div class="care-time-lbl">夜ケア</div>
+        <div class="care-check-item" onclick="toggleCheck(this)">
+          <div class="care-checkbox"><div class="care-check-mark">✓</div></div>
+          <div class="care-item-name">メイク落とし / クレンジング</div>
+          <div class="care-item-status" style="color:var(--text-lt)">—</div>
+        </div>
+        <div class="care-check-item" onclick="toggleCheck(this)">
+          <div class="care-checkbox"><div class="care-check-mark">✓</div></div>
+          <div class="care-item-name">洗顔</div>
+          <div class="care-item-status" style="color:var(--text-lt)">—</div>
+        </div>
+        <div class="care-check-item" onclick="toggleCheck(this)">
+          <div class="care-checkbox"><div class="care-check-mark">✓</div></div>
+          <div class="care-item-name">保湿クリーム</div>
+          <div class="care-item-status" style="color:var(--text-lt)">—</div>
+        </div>
+        <div class="care-check-item" onclick="toggleCheck(this)">
+          <div class="care-checkbox"><div class="care-check-mark">✓</div></div>
+          <div class="care-item-name">特別ケア（シートマスク等）</div>
+          <div class="care-item-status" style="color:var(--text-lt)">—</div>
+        </div>
+      </div>
+    </div><!-- /rsec-care -->
+
+    <!-- Lifestyle tab (US-005) -->
+    <div class="rsec" id="rsec-life">
+      <div class="rec-section">
+        <div class="rec-sec-hd">Today's Lifestyle Data (US-005)</div>
+        <div class="life-grid">
+          <div class="life-cell">
+            <div class="life-cell-lbl">睡眠時間</div>
+            <div class="life-cell-val">6.1<span class="life-cell-unit">h</span></div>
+            <div class="life-cell-bar"><div class="life-cell-fill warn" style="width:61%"></div></div>
+          </div>
+          <div class="life-cell">
+            <div class="life-cell-lbl">ストレスレベル</div>
+            <div class="life-cell-val">7<span class="life-cell-unit">/10</span></div>
+            <div class="life-cell-bar"><div class="life-cell-fill warn" style="width:70%"></div></div>
+          </div>
+          <div class="life-cell">
+            <div class="life-cell-lbl">水分摂取</div>
+            <div class="life-cell-val">1.2<span class="life-cell-unit">L</span></div>
+            <div class="life-cell-bar"><div class="life-cell-fill warn" style="width:40%"></div></div>
+          </div>
+          <div class="life-cell">
+            <div class="life-cell-lbl">運動時間</div>
+            <div class="life-cell-val">20<span class="life-cell-unit">min</span></div>
+            <div class="life-cell-bar"><div class="life-cell-fill" style="width:40%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="rec-section" style="padding-top:0;border-bottom:none">
+        <div class="rec-sec-hd" style="margin-bottom:0">記録を更新</div>
+        <button class="life-log-btn"><div class="llb-lbl">睡眠時間を記録</div><div class="llb-val">6.1h</div><div class="llb-arr">›</div></button>
+        <button class="life-log-btn"><div class="llb-lbl">ストレスレベルを入力</div><div class="llb-val">7/10</div><div class="llb-arr">›</div></button>
+        <button class="life-log-btn"><div class="llb-lbl">食事・栄養バランス</div><div class="llb-val">良好</div><div class="llb-arr">›</div></button>
+        <button class="life-log-btn"><div class="llb-lbl">運動記録</div><div class="llb-val">20min</div><div class="llb-arr">›</div></button>
+        <button class="life-log-btn"><div class="llb-lbl">飲酒・カフェイン</div><div class="llb-val">コーヒー2杯</div><div class="llb-arr">›</div></button>
+      </div>
+    </div><!-- /rsec-life -->
+
+  </div><!-- /rec-body -->
+</div><!-- /screen-record -->
+
+
+<!-- ════════════════════════════════
+     IMPROVE SCREEN (US-007, 008, 009, 010, 011)
+════════════════════════════════ -->
+<div class="screen-sec" id="screen-improve">
+  <div class="imp-hdr">
+    <div class="imp-hdr-title">改善プラン</div>
+    <div style="font-size:8px;color:rgba(255,255,255,0.35);letter-spacing:1.5px">AI Generated · 2026.07</div>
+  </div>
+  <div class="imp-body">
+
+    <!-- Progress tracking (US-011) -->
+    <div class="imp-section">
+      <div class="imp-sec-hd">Improvement Progress</div>
+      <div class="imp-sec-sub">先月比の改善状況</div>
+      <div class="progress-row"><div class="progress-name">赤み</div><div class="progress-track"><div class="progress-fill" style="width:78%"></div></div><div class="progress-val">78</div><div class="progress-chg">▲8</div></div>
+      <div class="progress-row"><div class="progress-name">テカリ</div><div class="progress-track"><div class="progress-fill" style="width:80%"></div></div><div class="progress-val">80</div><div class="progress-chg">▲6</div></div>
+      <div class="progress-row"><div class="progress-name">シミ</div><div class="progress-track"><div class="progress-fill" style="width:66%"></div></div><div class="progress-val">66</div><div class="progress-chg">▲2</div></div>
+      <div class="progress-row"><div class="progress-name">乾燥</div><div class="progress-track"><div class="progress-fill low" style="width:55%"></div></div><div class="progress-val">55</div><div class="progress-chg" style="color:var(--terra)">▼3</div></div>
+    </div>
+
+    <!-- Product recommendations (US-008) -->
+    <div class="imp-section">
+      <div class="imp-sec-hd">Recommended Products</div>
+      <div class="imp-sec-sub">あなたの肌状態に合わせたおすすめアイテム</div>
+      <div class="product-card">
+        <div class="product-img"><div class="product-img-letter">Ce</div></div>
+        <div class="product-info">
+          <div class="product-brand">CETAPHIL</div>
+          <div class="product-name">モイスチャライジングクリーム</div>
+          <div class="product-reason">乾燥スコア55に対応。セラミド・ナイアシンアミド配合で肌バリア強化に効果的。低刺激・無香料。</div>
+          <div class="product-tag">乾燥対策</div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img"><div class="product-img-letter">Av</div></div>
+        <div class="product-info">
+          <div class="product-brand">AVÈNE</div>
+          <div class="product-name">トレリアン セラムコントロール</div>
+          <div class="product-reason">高コルチゾール状態の赤みに対応。敏感肌向け鎮静成分テトラペプチド配合。</div>
+          <div class="product-tag">赤み鎮静</div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img"><div class="product-img-letter">SK</div></div>
+        <div class="product-info">
+          <div class="product-brand">SK-II</div>
+          <div class="product-name">フェイシャル トリートメント エッセンス</div>
+          <div class="product-reason">ピテラ成分が毛穴・テカリを同時にケア。あなたの現在の毛穴スコア60の改善が期待できます。</div>
+          <div class="product-tag">毛穴・テカリ</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Similar cases (US-009) -->
+    <div class="imp-section">
+      <div class="imp-sec-hd">Similar User Cases</div>
+      <div class="imp-sec-sub">似た肌質・生活習慣のユーザーの改善例</div>
+      <div class="case-card">
+        <div class="case-hd">
+          <div class="case-profile">30代 · 混合肌 · 高コルチゾール傾向</div>
+          <div class="case-score-change">58 → 74 (+16)</div>
+        </div>
+        <div class="case-track" style="height:1px;background:var(--ln-lt);position:relative;margin-bottom:8px">
+          <div style="position:absolute;left:0;top:0;height:100%;width:58%;background:var(--fog-dk)"></div>
+          <div style="position:absolute;left:58%;top:0;height:100%;width:16%;background:var(--green)"></div>
+        </div>
+        <div class="case-key">キーアクション：セラミド保湿を毎朝継続 + 睡眠7h確保 + 週2回の有酸素運動。2ヶ月で達成。</div>
+      </div>
+      <div class="case-card">
+        <div class="case-hd">
+          <div class="case-profile">20代後半 · 脂性肌 · テカリ・毛穴悩み</div>
+          <div class="case-score-change">55 → 70 (+15)</div>
+        </div>
+        <div class="case-track" style="height:1px;background:var(--ln-lt);position:relative;margin-bottom:8px">
+          <div style="position:absolute;left:0;top:0;height:100%;width:55%;background:var(--fog-dk)"></div>
+          <div style="position:absolute;left:55%;top:0;height:100%;width:15%;background:var(--green)"></div>
+        </div>
+        <div class="case-key">キーアクション：洗顔回数を朝晩2回に削減 + 乳液ベースの保湿に切替え + 食物繊維摂取増加。3ヶ月で達成。</div>
+      </div>
+    </div>
+
+    <!-- Lifestyle improvement plan (US-010) -->
+    <div class="imp-section" style="border-bottom:none">
+      <div class="imp-sec-hd">This Week's Action Plan</div>
+      <div class="imp-sec-sub">AI による今週の優先アクション</div>
+      <div class="action-item">
+        <div class="action-num">01</div>
+        <div class="action-content">
+          <div class="action-name">セラミド保湿を毎朝継続</div>
+          <div class="action-desc">乾燥スコア改善のため、洗顔後2分以内に化粧水を塗布。量は500円玉大が目安。</div>
+          <div class="action-badge badge-green">高優先度</div>
+        </div>
+      </div>
+      <div class="action-item">
+        <div class="action-num">02</div>
+        <div class="action-content">
+          <div class="action-name">就寝7時間以上を確保する</div>
+          <div class="action-desc">コルチゾール値低下に最も効果的。就寝前1時間のスマートフォン使用を控える。</div>
+          <div class="action-badge badge-terra">コルチゾール対策</div>
+        </div>
+      </div>
+      <div class="action-item">
+        <div class="action-num">03</div>
+        <div class="action-content">
+          <div class="action-name">水分摂取を1日2L以上に増やす</div>
+          <div class="action-desc">現在1.2L。皮膚水分量45%の改善には水分補給が効果的。食事以外でも意識的に。</div>
+          <div class="action-badge badge-terra">要改善</div>
+        </div>
+      </div>
+      <div class="action-item">
+        <div class="action-num">04</div>
+        <div class="action-content">
+          <div class="action-name">週3回、20分以上のウォーキング</div>
+          <div class="action-desc">適度な有酸素運動はコルチゾール調節・血行促進に有効。屋外で行うと日光浴効果も。</div>
+          <div class="action-badge badge-green">継続推奨</div>
+        </div>
+      </div>
+      <div class="action-item" style="border-bottom:none">
+        <div class="action-num">05</div>
+        <div class="action-content">
+          <div class="action-name">刺激物（カフェイン・アルコール）を控える</div>
+          <div class="action-desc">コーヒー2杯/日→1杯に削減。アルコールは週2日以内を推奨。赤み改善効果が期待できます。</div>
+          <div class="action-badge badge-terra">コルチゾール対策</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /imp-body -->
+</div><!-- /screen-improve -->
+
+<!-- OVERLAY + BOTTOM SHEET (inside #content so it never covers bottom nav) -->
+<div class="sh-overlay" id="overlay" onclick="closeSheet()"></div>
+<div class="btm-sheet" id="btmSheet">
+  <div class="sh-handle"></div>
+  <div class="sh-hd">
+    <div>
+      <div class="sh-eyebrow" id="shEyebrow">Diagnostic Detail</div>
+      <div class="sh-title" id="shTitle">右頬</div>
+    </div>
+    <button class="sh-close" onclick="closeSheet()">✕</button>
+  </div>
+  <div class="sh-body">
+    <div class="sh-metrics" id="shMetrics"></div>
+    <div class="sh-sec">Radar Analysis</div>
+    <div id="shRadar" style="display:flex;justify-content:center;margin-bottom:22px"></div>
+    <div class="sh-sec">5-Month Trend</div>
+    <div id="shTrend" style="margin-bottom:18px"></div>
+    <div class="sh-sec">Recommendation</div>
+    <div class="sh-advice"><div class="sh-advice-txt" id="shAdvice"></div></div>
+    <button class="btn-adv" style="margin-top:14px" onclick="navTo('improve');closeSheet()">View Improvement Plan →</button>
+    <div class="sh-disc">本表示は参考情報です。医師の診断ではありません。</div>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="bnav-btn active" id="nav-home" onclick="navTo('home')">
+    <svg class="bnav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.2">
+      <path d="M3 9L10 3l7 6v9h-5v-5H8v5H3z" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="bnav-lbl">Home</div>
+  </button>
+  <button class="bnav-btn" id="nav-analysis" onclick="navTo('analysis')">
+    <svg class="bnav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.2">
+      <circle cx="10" cy="8" r="5"/>
+      <path d="M7 8a3 3 0 003-3" stroke-linecap="round"/>
+      <circle cx="7" cy="8" r="1" fill="currentColor" stroke="none"/>
+      <circle cx="13" cy="8" r="1" fill="currentColor" stroke="none"/>
+      <path d="M4 17c0-3 2.5-5 6-5s6 2 6 5" stroke-linecap="round"/>
+    </svg>
+    <div class="bnav-lbl">診断</div>
+  </button>
+  <button class="bnav-btn" id="nav-record" onclick="navTo('record')">
+    <svg class="bnav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.2">
+      <rect x="4" y="3" width="12" height="14" rx="1"/>
+      <line x1="7" y1="8" x2="13" y2="8" stroke-linecap="round"/>
+      <line x1="7" y1="11" x2="11" y2="11" stroke-linecap="round"/>
+      <line x1="13" y1="14" x2="13" y2="11" stroke-linecap="round"/>
+      <line x1="11" y1="12.5" x2="15" y2="12.5" stroke-linecap="round"/>
+    </svg>
+    <div class="bnav-lbl">記録</div>
+  </button>
+  <button class="bnav-btn" id="nav-improve" onclick="navTo('improve')">
+    <svg class="bnav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.2">
+      <polyline points="3,14 7,9 11,12 17,5" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="13,5 17,5 17,9" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="bnav-lbl">改善</div>
+  </button>
+</nav>
+
+</div><!-- /phone -->
+
+<script>
+// ── MARKER DATA ──
+const markerData = {
+  rcheek: { title:'右頬', eyebrow:'Right Cheek Analysis',
+    metrics:[{l:'水分量',v:45,u:'%',pct:45,warm:false},{l:'油分量',v:58,u:'%',pct:58,warm:false},{l:'赤みスコア',v:72,u:'pt',pct:72,warm:true},{l:'毛穴スコア',v:65,u:'pt',pct:65,warm:false}],
+    radar:{labels:['水分','油分','赤み','毛穴','シミ'],values:[45,58,72,65,30]}, trend:[78,75,85,68,72],
+    advice:'右頬に赤みが強く出る傾向があります。生理前7〜10日は刺激の強い成分（レチノール・ピーリング系）を控えめにし、保湿・鎮静ケアを重点化することを検討してみましょう。気になる症状が続く場合は皮膚科へご相談ください。' },
+  lcheek: { title:'左頬', eyebrow:'Left Cheek Analysis',
+    metrics:[{l:'水分量',v:48,u:'%',pct:48,warm:false},{l:'油分量',v:55,u:'%',pct:55,warm:false},{l:'赤みスコア',v:68,u:'pt',pct:68,warm:true},{l:'毛穴スコア',v:62,u:'pt',pct:62,warm:false}],
+    radar:{labels:['水分','油分','赤み','毛穴','シミ'],values:[48,55,68,62,28]}, trend:[72,70,80,65,68],
+    advice:'左頬は右頬より赤みが少し穏やかです。保湿継続と日焼け止めの徹底が現在の肌状態の維持につながる可能性があります。' },
+  tzone: { title:'Tゾーン', eyebrow:'T-Zone Analysis',
+    metrics:[{l:'テカリ度',v:62,u:'%',pct:62,warm:true},{l:'水分量',v:38,u:'%',pct:38,warm:false},{l:'毛穴スコア',v:70,u:'pt',pct:70,warm:true},{l:'コンディション',v:55,u:'pt',pct:55,warm:false}],
+    radar:{labels:['テカリ','水分','毛穴','赤み','コンディション'],values:[62,38,70,35,55]}, trend:[68,70,75,60,62],
+    advice:'Tゾーンにテカリが目立つ傾向があります。洗いすぎによる乾燥が皮脂分泌を促進させている可能性があります。刺激の少ないクレンジングと適度な保湿を意識してみましょう。' },
+  eye: { title:'目周り', eyebrow:'Eye Area Analysis',
+    metrics:[{l:'シワ指数',v:30,u:'pt',pct:30,warm:false},{l:'水分量',v:42,u:'%',pct:42,warm:false},{l:'くすみ度',v:55,u:'pt',pct:55,warm:true},{l:'疲れ感',v:45,u:'pt',pct:45,warm:true}],
+    radar:{labels:['シワ','くすみ','たるみ','乾燥','疲れ感'],values:[30,55,25,58,45]}, trend:[35,33,40,28,30],
+    advice:'目周りはシワ・くすみの傾向があります。睡眠時間が短い日の翌日に目元のくすみが強まる傾向がみられます。アイクリームによる保湿と7時間以上の睡眠確保が改善につながる可能性があります。' },
+  chin: { title:'あご・口角', eyebrow:'Chin / Mouth Analysis',
+    metrics:[{l:'ほうれい線',v:22,u:'pt',pct:22,warm:false},{l:'水分量',v:58,u:'%',pct:58,warm:false},{l:'たるみ指数',v:18,u:'pt',pct:18,warm:false},{l:'キメ',v:65,u:'pt',pct:65,warm:false}],
+    radar:{labels:['ほうれい線','水分','たるみ','赤み','キメ'],values:[22,58,18,35,65]}, trend:[20,22,25,18,22],
+    advice:'あご・口角周りは今月比較的良好な状態です。保湿継続と表情筋ケアで現状維持を心がけましょう。' }
+};
+
+// ── MAIN NAVIGATION ──
+function navTo(screen) {
+  document.querySelectorAll('.screen-sec').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + screen).classList.add('active');
+  const navBtn = document.getElementById('nav-' + screen);
+  if (navBtn) navBtn.classList.add('active');
+}
+
+// ── ANALYSIS INTERNAL TABS ──
+function setAnalysisTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    const tabs = ['photo', 'compare', 'history'];
+    b.classList.toggle('active', tabs[i] === tab);
+  });
+  document.querySelectorAll('.asec').forEach(s => s.classList.remove('active'));
+  document.getElementById('asec-' + tab).classList.add('active');
+}
+
+// ── RECORD SCREEN TABS ──
+function setRecTab(tab) {
+  document.querySelectorAll('.rec-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.rsec').forEach(s => s.classList.remove('active'));
+  document.getElementById('rtab-' + tab).classList.add('active');
+  document.getElementById('rsec-' + tab).classList.add('active');
+}
+
+// ── OVERLAY TOGGLE ──
+let currentOv = null;
+function setOverlay(type) {
+  if (currentOv) {
+    document.getElementById('ov-' + currentOv).style.opacity = 0;
+    const prevBtn = document.getElementById('btn-' + currentOv);
+    if (prevBtn) prevBtn.classList.remove('active');
+  }
+  document.getElementById('btn-off').classList.remove('active');
+  if (!type) { currentOv = null; document.getElementById('btn-off').classList.add('active'); return; }
+  currentOv = type;
+  document.getElementById('ov-' + type).style.opacity = 1;
+  document.getElementById('btn-' + type).classList.add('active');
+}
+
+// ── MARKER SHEET ──
+function openMarker(id) {
+  const d = markerData[id];
+  document.getElementById('shEyebrow').textContent = d.eyebrow;
+  document.getElementById('shTitle').textContent = d.title;
+  document.getElementById('shMetrics').innerHTML = d.metrics.map(m => `
+    <div class="sh-m">
+      <div class="shm-l">${m.l}</div>
+      <div class="shm-v">${m.v}<span class="shm-u">${m.u}</span></div>
+      <div class="shm-track"><div class="shm-fill${m.warm?' warm':''}" style="width:${m.pct}%"></div></div>
+    </div>`).join('');
+  document.getElementById('shRadar').innerHTML = buildRadar(d.radar);
+  document.getElementById('shTrend').innerHTML = buildTrend(d.trend);
+  document.getElementById('shAdvice').textContent = d.advice;
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('btmSheet').classList.add('open');
+  document.querySelectorAll('.d-marker').forEach(m => m.classList.remove('active'));
+  document.getElementById('mk-' + id)?.classList.add('active');
+}
+function closeSheet() {
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('btmSheet').classList.remove('open');
+  document.querySelectorAll('.d-marker').forEach(m => m.classList.remove('active'));
+}
+
+// ── SKINCARE CHECKBOX TOGGLE ──
+function toggleCheck(item) {
+  const cb = item.querySelector('.care-checkbox');
+  const st = item.querySelector('.care-item-status');
+  cb.classList.toggle('checked');
+  if (cb.classList.contains('checked')) { st.textContent = 'DONE'; st.style.color = 'var(--green-lt)'; }
+  else { st.textContent = '—'; st.style.color = 'var(--text-lt)'; }
+}
+
+// ── RADAR CHART ──
+function buildRadar(data) {
+  const s=140,cx=70,cy=70,r=50,n=data.labels.length;
+  const ang=data.labels.map((_,i)=>(-90+i*360/n)*Math.PI/180);
+  let svg=`<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">`;
+  [0.25,0.5,0.75,1].forEach(lv=>{
+    const pts=ang.map(a=>`${cx+Math.cos(a)*r*lv},${cy+Math.sin(a)*r*lv}`).join(' ');
+    svg+=`<polygon points="${pts}" fill="none" stroke="var(--ln-lt)" stroke-width="${lv===1?1:0.7}"/>`;
+  });
+  ang.forEach(a=>{ svg+=`<line x1="${cx}" y1="${cy}" x2="${cx+Math.cos(a)*r}" y2="${cy+Math.sin(a)*r}" stroke="var(--ln-lt)" stroke-width="0.7"/>`; });
+  const dataPts=ang.map((a,i)=>`${cx+Math.cos(a)*r*data.values[i]/100},${cy+Math.sin(a)*r*data.values[i]/100}`).join(' ');
+  svg+=`<polygon points="${dataPts}" fill="var(--green)" fill-opacity="0.12" stroke="var(--green)" stroke-width="1.5"/>`;
+  ang.forEach((a,i)=>{
+    const px=cx+Math.cos(a)*r*data.values[i]/100, py=cy+Math.sin(a)*r*data.values[i]/100;
+    svg+=`<circle cx="${px}" cy="${py}" r="2.8" fill="var(--green)" stroke="var(--ivory)" stroke-width="1.2"/>`;
+    const lx=cx+Math.cos(a)*(r+14), ly=cy+Math.sin(a)*(r+14);
+    svg+=`<text x="${lx}" y="${ly+3}" font-size="7.5" fill="var(--text-lt)" text-anchor="middle">${data.labels[i]}</text>`;
+  });
+  svg+='</svg>'; return svg;
+}
+
+// ── TREND CHART ──
+function buildTrend(values) {
+  const w=320,h=56,pad=16,n=values.length;
+  const max=Math.max(...values)+8, min=Math.max(0,Math.min(...values)-12);
+  const xStep=(w-2*pad)/(n-1);
+  const yScale=v=>h-pad-(v-min)/(max-min)*(h-2*pad);
+  const labels=['3月','4月','5月','6月','7月'];
+  const pts=values.map((v,i)=>`${pad+i*xStep},${yScale(v)}`).join(' ');
+  const fillPts=[`${pad},${h-4}`,...values.map((v,i)=>`${pad+i*xStep},${yScale(v)}`),`${pad+(n-1)*xStep},${h-4}`].join(' ');
+  let svg=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="display:block;width:100%">`;
+  svg+=`<polygon points="${fillPts}" fill="var(--green)" opacity="0.07"/>`;
+  svg+=`<polyline points="${pts}" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+  values.forEach((v,i)=>{
+    const x=pad+i*xStep, y=yScale(v), last=i===n-1;
+    svg+=`<circle cx="${x}" cy="${y}" r="${last?4:2.5}" fill="${last?'var(--text)':'var(--green)'}" stroke="var(--ivory)" stroke-width="${last?1.5:1}"/>`;
+    svg+=`<text x="${x}" y="${h-1}" font-size="7.5" fill="var(--text-lt)" text-anchor="middle">${labels[i]}</text>`;
+    if(last){ svg+=`<rect x="${x-12}" y="${y-14}" width="24" height="11" fill="var(--text)"/>`; svg+=`<text x="${x}" y="${y-6}" font-size="8.5" fill="#fff" text-anchor="middle">${v}</text>`; }
+  });
+  svg+='</svg>'; return svg;
+}
+
+// ── COMPARE SLIDER ──
+const cmpRange=document.getElementById('cmpRange');
+const cmpAfterEl=document.getElementById('cmpAfter');
+const cmpDivEl=document.getElementById('cmpDiv');
+const cmpHdlEl=document.getElementById('cmpHdl');
+function updateCmp(pct) {
+  cmpAfterEl.style.clipPath=`inset(0 0 0 ${pct}%)`;
+  cmpDivEl.style.left=pct+'%';
+  cmpHdlEl.style.left=pct+'%';
+}
+cmpRange.addEventListener('input',()=>updateCmp(cmpRange.value));
+updateCmp(50);
+
+// ── HISTORY SELECT ──
+function selectHist(el) {
+  document.querySelectorAll('.hist-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>
