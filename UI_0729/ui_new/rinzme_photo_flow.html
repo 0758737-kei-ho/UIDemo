@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f8f6fc">
+<title>RINZME | はじめる</title>
+<style>
+:root { --ink:#443c56; --muted:#91869f; --primary:#9b7ac0; --line:#ece5f3; --surface:#ffffff; }
+* { box-sizing:border-box; }
+body { min-width:320px; margin:0; color:var(--ink); background:radial-gradient(ellipse at 50% 34%,#eee3fa 0%,#f7f3fc 42%,#faf9fc 78%); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif; }
+a { color:inherit; text-decoration:none; }
+a:focus-visible, button:focus-visible { outline:3px solid #b899d1; outline-offset:3px; }
+.app { display:flex; flex-direction:column; width:min(100%,540px); min-height:100dvh; margin:auto; padding:max(18px,env(safe-area-inset-top)) 20px calc(22px + env(safe-area-inset-bottom)); }
+.header { display:flex; align-items:center; justify-content:space-between; }
+.brand { color:#6b4f89; font-size:22px; font-weight:650; letter-spacing:2.8px; }.brand small { display:block; margin-top:4px; color:#a08bb2; font-size:8px; font-weight:600; letter-spacing:1.5px; }
+.privacy { display:grid; place-items:center; width:42px; height:42px; border:1px solid #e8def1; border-radius:50%; color:#8d73a6; background:#ffffffa6; font-size:18px; }
+.environment { display:flex; flex-wrap:wrap; justify-content:center; gap:7px; margin-top:24px; color:var(--muted); font-size:10px; }.environment span { padding:7px 10px; border:1px solid #ebe2f4; border-radius:20px; background:#ffffff85; }
+.intro { margin-top:24px; text-align:center; }.eyebrow { color:#aa8bbc; font-size:9px; font-weight:700; letter-spacing:1.8px; }.intro h1 { margin:10px 0 5px; color:#59456d; font-size:clamp(22px,6vw,29px); font-weight:450; line-height:1.55; letter-spacing:-.04em; }.intro p { margin:0; color:var(--muted); font-size:12px; }
+.companion-stage { position:relative; display:grid; place-items:center; height:256px; margin:5px 0 -4px; overflow:visible; }.aura { position:absolute; width:270px; height:225px; border-radius:50%; background:radial-gradient(ellipse,#d8b8f580 0%,#e7d1ff42 42%,transparent 73%); filter:blur(12px); animation:breathe 5s ease-in-out infinite; }.ring { position:absolute; width:200px; height:200px; border:1px solid #d9c2ed70; border-radius:50%; box-shadow:0 0 28px #d7b9ed25,inset 0 0 24px #ead7ff25; }.fairy { position:relative; width:205px; height:205px; border-radius:50%; background:radial-gradient(circle at 34% 25%,#fff 0 5%,#f7efff 17%,#d8bafa 52%,#b68bec 80%,#f0dfff 100%); box-shadow:inset 12px 9px 24px #fff9,inset -13px -18px 30px #7952b133,0 0 25px #caa2f370; animation:float 5s ease-in-out infinite; }.fairy::before { position:absolute; inset:24px 33px auto; height:7px; border-radius:50%; background:#fff; box-shadow:61px 0 #fff; content:""; }.fairy::after { position:absolute; left:88px; top:113px; width:29px; height:15px; border-bottom:3px solid #fff; border-radius:0 0 50% 50%; content:""; }.wing { position:absolute; width:58px; height:93px; border:1px solid #ffffffa0; border-radius:88% 12% 80% 20%; background:linear-gradient(135deg,#fff8,#d4b8fa33); filter:drop-shadow(0 0 8px #f9eaff); }.wing.left { left:-33px; top:72px; transform:rotate(-45deg); }.wing.right { right:-36px; top:28px; transform:rotate(33deg); }.spark { position:absolute; color:#fff; font-size:19px; text-shadow:0 0 7px #fff,0 0 18px #caa2ef; animation:twinkle 3s ease-in-out infinite; }.spark.one { top:37px; left:calc(50% - 119px); }.spark.two { top:30px; left:calc(50% + 96px); animation-delay:-1s; }.spark.three { bottom:22px; left:calc(50% + 93px); font-size:13px; animation-delay:-2s; }
+@keyframes float { 0%,100%{transform:translateY(3px) rotate(-3deg)}50%{transform:translateY(-9px) rotate(1deg)} }@keyframes breathe { 0%,100%{transform:scale(.94);opacity:.68}50%{transform:scale(1.07);opacity:1} }@keyframes twinkle { 0%,100%{opacity:.3;transform:scale(.75)}50%{opacity:1;transform:scale(1.1)} }
+.status { margin:0 0 15px; color:#9a7fb3; font-size:11px; text-align:center; }.status::before { display:inline-block; width:5px; height:5px; margin-right:7px; border-radius:50%; background:#b899d1; box-shadow:0 0 7px #c7a9e0; vertical-align:middle; content:""; }
+.reply { padding:20px; border:1px solid #fff; border-radius:24px; background:#ffffffbd; box-shadow:0 16px 50px #80609a0d,inset 0 1px 0 #fff; backdrop-filter:blur(12px); }.reply-label { margin-bottom:9px; color:#a185b7; font-size:10px; letter-spacing:1.7px; }.reply-text { color:#594b65; font-size:14px; line-height:1.85; }
+.user-line { min-height:24px; padding:9px 13px 0; color:#8f829d; font-size:11px; }.suggestions { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:15px 0 17px; }.chip { padding:9px 12px; border:1px solid #e3d6ef; border-radius:20px; color:#9475ae; background:#ffffff70; font-size:11px; cursor:pointer; }.chip.camera { border-color:#bfa1d8; color:white; background:linear-gradient(135deg,#b08bcb,#8764a5); box-shadow:0 7px 15px #9b79bc25; }
+.capture-cta { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:15px 16px; border:1px solid #e7daf1; border-radius:18px; background:linear-gradient(135deg,#f5edfb,#fdfaff); }.capture-cta div { min-width:0; }.capture-cta strong { display:block; color:#665077; font-size:13px; }.capture-cta p { margin:4px 0 0; color:var(--muted); font-size:10px; line-height:1.55; }.round-arrow { display:grid; flex:0 0 auto; place-items:center; width:39px; height:39px; border-radius:50%; color:white; background:#9472b3; font-size:19px; }
+.controls { margin-top:18px; }.voice-controls { display:flex; align-items:center; justify-content:center; gap:24px; }.icon-button { display:grid; place-items:center; width:42px; height:42px; border:1px solid #e8def1; border-radius:50%; color:#8d73a6; background:#ffffffa6; }.icon-button svg { width:20px; height:20px; }.mic { display:grid; place-items:center; width:68px; height:68px; border:0; border-radius:50%; color:white; background:linear-gradient(145deg,#b797d0,#8c6aad); box-shadow:0 8px 26px #9b79bc35,inset 0 1px 2px #ffffff55; }.mic svg { width:26px; height:26px; }.mic.active { background:linear-gradient(145deg,#c59bba,#aa78a5); animation:pulse 1.2s infinite; }.hint { margin:13px 0 9px; color:#91869f; font-size:11px; text-align:center; }.text-form { display:flex; gap:8px; margin-top:12px; }.text-form[hidden] { display:none; }.text-form input { flex:1; min-width:0; padding:12px 14px; border:1px solid var(--line); border-radius:13px; color:var(--ink); background:#fff; }.send { padding:0 15px; border:0; border-radius:13px; color:#fff; background:#9672bd; font-size:12px; font-weight:700; }@keyframes pulse { 50% { box-shadow:0 0 0 10px #b58ac51a; } }
+.footer { margin-top:auto; padding-top:17px; color:var(--muted); font-size:9px; line-height:1.8; text-align:center; }
+@media (max-width:360px) { .app{padding-inline:14px}.environment span{padding:6px 8px}.companion-stage{height:236px}.fairy{transform:scale(.92)}.capture-cta{padding:13px}.intro h1{font-size:22px} }
+@media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; } }
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="header">
+    <div class="brand">RINZME<small>SKIN COMPANION</small></div>
+    <span class="privacy" aria-label="端末内で処理">⌁</span>
+  </header>
+
+  <div class="environment" aria-label="デモ環境情報"><span>☀ 22°C</span><span>湿度 38%</span><span>UV 4</span><span>環境情報：デモ値</span></div>
+
+  <section class="intro" aria-labelledby="welcome-title"><div class="eyebrow">YOUR GENTLE SKIN COMPANION</div><h1 id="welcome-title">今日はお肌の調子、<br>どうかな？</h1><p>気になることを、気軽に話してね。</p></section>
+
+  <div class="companion-stage" aria-hidden="true"><div class="aura"></div><div class="ring"></div><i class="spark one">✦</i><i class="spark two">✧</i><i class="spark three">✦</i><div class="fairy"><span class="wing left"></span><span class="wing right"></span></div></div>
+  <p class="status">あなたのお話を待っています</p>
+
+  <section class="reply" aria-label="RINZMEの返答"><div class="reply-label">RINZME</div><div class="reply-text" id="reply" aria-live="polite">こんにちは、RINZMEだよ。<br>写真で今の肌の印象をアバターに映してみる？</div></section>
+  <div class="user-line" id="user-line" aria-live="polite"></div>
+
+  <nav class="suggestions" aria-label="相談方法"><button class="chip" type="button" data-say="今日は頬が少し乾燥している">頬が少し乾燥している</button><button class="chip" type="button" data-say="最近の傾向を見せて">最近の傾向を見せて</button><a class="chip camera" href="skin_avatar_capture.html">📷 写真で相談する</a></nav>
+
+  <a class="capture-cta" id="photo-flow" href="skin_avatar_capture.html" aria-label="写真を撮影して肌アバターを作成する"><div><strong>写真から肌アバターをつくる</strong><p>撮影またはアップロード後、顔の位置にアバターを表示します。</p></div><span class="round-arrow" aria-hidden="true">→</span></a>
+
+  <section class="controls" aria-label="会話操作"><div class="voice-controls"><button class="icon-button" id="text-button" type="button" aria-label="文字入力に切り替える" aria-expanded="false" aria-controls="text-form"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M6 10h2m2 0h2m2 0h2m2 0h1M6 13h2m2 0h2m2 0h2M8 16h8"/></svg></button><button class="mic" id="mic-button" type="button" aria-label="話しかける" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"/></svg></button></div><p class="hint" id="mic-hint">タップして話しかけてね</p><form class="text-form" id="text-form" hidden><label class="sr-only" for="text-input">会話の入力</label><input id="text-input" maxlength="500" autocomplete="off" placeholder="肌のこと、暮らしのこと…"><button class="send" type="submit">送信</button></form></section>
+
+  <footer class="footer">医療診断は行いません。写真はアバター生成時のみ端末内で扱います。<br>RINZME Prototype</footer>
+</main>
+<script>
+"use strict";
+const $ = selector => document.querySelector(selector);
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+function respond(text) {
+  const message = text.trim().slice(0, 500);
+  if (!message) return;
+  $("#user-line").textContent = "あなた： " + message;
+  $("#text-input").value = "";
+  if (/写真|カメラ|撮影/.test(message)) $("#reply").textContent = "写真で今の肌の印象をアバターに映してみよう。下のカードから撮影または写真選択へ進めるよ。";
+  else if (/乾燥|赤み|かゆ|肌/.test(message)) $("#reply").textContent = "教えてくれてありがとう。気になる部位や、少し・強いなど感じ方も聞かせてね。写真で相談することもできるよ。";
+  else if (/傾向|レポート/.test(message)) $("#reply").textContent = "今は会話と写真からの体験を用意しているよ。写真アバターでは、色味の印象をやさしく表現するよ。";
+  else $("#reply").textContent = "聞かせてくれてありがとう。肌のこと、睡眠のこと、写真での相談などを試してみてね。";
+}
+$("#text-button").addEventListener("click", () => { const form = $("#text-form"); form.hidden = !form.hidden; $("#text-button").setAttribute("aria-expanded", String(!form.hidden)); if (!form.hidden) $("#text-input").focus(); });
+$("#text-form").addEventListener("submit", event => { event.preventDefault(); respond($("#text-input").value); });
+document.querySelectorAll("[data-say]").forEach(button => button.addEventListener("click", () => respond(button.dataset.say)));
+function stopListening() { if (recognition) recognition.stop(); recognition = null; $("#mic-button").classList.remove("active"); $("#mic-button").setAttribute("aria-pressed", "false"); $("#mic-hint").textContent = "タップして話しかけてね"; }
+$("#mic-button").addEventListener("click", () => {
+  if (recognition) { stopListening(); return; }
+  if (!SpeechRecognition) { $("#text-button").click(); $("#mic-hint").textContent = "音声認識に未対応です。文字入力をご利用ください。"; return; }
+  recognition = new SpeechRecognition(); recognition.lang = "ja-JP"; recognition.interimResults = false; recognition.continuous = false;
+  recognition.onstart = () => { $("#mic-button").classList.add("active"); $("#mic-button").setAttribute("aria-pressed", "true"); $("#mic-hint").textContent = "聞いています…"; };
+  recognition.onresult = event => respond(event.results[0][0].transcript);
+  recognition.onerror = () => { $("#mic-hint").textContent = "音声を取得できませんでした。文字入力をご利用ください。"; };
+  recognition.onend = stopListening;
+  try { recognition.start(); } catch { stopListening(); }
+});
+</script>
+</body>
+</html>
