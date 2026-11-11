@@ -107,7 +107,7 @@ h1 { margin: 8px 0 7px; color: #564268; font-size: clamp(22px, 6vw, 30px); font-
 .summary .mini-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 10px; }
 .mini { padding: 9px 5px; border-radius: 10px; text-align: center; background: #f8f4fb; }
 .mini span { display: block; color: #897d93; font-size: 9px; }.mini strong { color: #75568f; font-size: 13px; }
-.analysis-panel { margin-top: 13px; padding: 16px; border: 1px solid #eaddec; border-radius: 18px; background: #ffffffc7; }.analysis-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }.analysis-head h2 { margin: 0; color: #5b476d; font-size: 14px; }.analysis-head p { margin: 4px 0 0; color: #84798c; font-size: 10px; }.compare-button { flex: 0 0 auto; min-height: 34px; padding: 7px 10px; border: 1px solid #decdec; border-radius: 10px; color: #75568f; background: #f7f2fa; font-size: 10px; }.compare-button:disabled { opacity: .55; cursor: not-allowed; }.history-chart { display: flex; align-items: end; gap: 8px; height: 118px; margin: 15px 0 6px; padding: 5px 4px 0; border-bottom: 1px solid #e8deef; }.chart-point { position: relative; display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: end; height: 100%; min-width: 22px; }.chart-bar { width: min(25px, 74%); min-height: 5px; border-radius: 8px 8px 0 0; background: linear-gradient(#e8b6c5, #a67bc0); }.chart-value { margin-bottom: 4px; color: #875f9e; font-size: 9px; }.chart-label { margin-top: 7px; color: #968a9f; font-size: 9px; }.chart-legend { margin: 9px 0 0; color: #84798c; font-size: 10px; line-height: 1.6; }.comparison { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-top: 15px; padding-top: 14px; border-top: 1px solid #eee5f3; }.comparison[hidden] { display: none; }.avatar-compare-card { min-width: 0; padding: 10px 5px 7px; border-radius: 13px; background: #f8f4fb; text-align: center; }.avatar-compare-card span { display: block; color: #897d93; font-size: 10px; }.avatar-compare-card strong { display: block; margin-top: 4px; color: #75568f; font-size: 11px; }.comparison-avatar { display: grid; place-items: center; height: 112px; overflow: hidden; }.comparison-avatar svg { width: 102px; height: 112px; filter: drop-shadow(0 7px 8px rgba(108, 77, 135, .16)); }.compare-arrow { color: #a17ab9; font-size: 20px; }
+.analysis-panel { margin-top: 13px; padding: 16px; border: 1px solid #eaddec; border-radius: 18px; background: #ffffffc7; }.analysis-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }.analysis-head h2 { margin: 0; color: #5b476d; font-size: 14px; }.analysis-head p { margin: 4px 0 0; color: #84798c; font-size: 10px; }.compare-button { flex: 0 0 auto; min-height: 34px; padding: 7px 10px; border: 1px solid #decdec; border-radius: 10px; color: #75568f; background: #f7f2fa; font-size: 10px; }.compare-button:disabled { opacity: .55; cursor: not-allowed; }.history-chart { display: flex; align-items: end; gap: 8px; height: 118px; margin: 15px 0 6px; padding: 5px 4px 0; border-bottom: 1px solid #e8deef; }.chart-point { position: relative; display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: end; height: 100%; min-width: 22px; }.chart-bar { width: min(25px, 74%); min-height: 5px; border-radius: 8px 8px 0 0; background: linear-gradient(#e8b6c5, #a67bc0); }.chart-value { margin-bottom: 4px; color: #875f9e; font-size: 9px; }.chart-label { margin-top: 7px; color: #968a9f; font-size: 9px; }.chart-legend { margin: 9px 0 0; color: #84798c; font-size: 10px; line-height: 1.6; }.comparison { margin-top: 15px; padding-top: 14px; border-top: 1px solid #eee5f3; }.comparison[hidden] { display: none; }.comparison-stage { position: relative; height: 248px; overflow: hidden; border-radius: 16px; background: radial-gradient(circle at 50% 30%, #faf7fe, #e7d9f1); touch-action: none; }.comparison-layer { position: absolute; inset: 0; display: grid; place-items: center; }.comparison-layer svg { width: 176px; height: 228px; filter: drop-shadow(0 12px 12px rgba(108, 77, 135, .16)); }.comparison-after { clip-path: inset(0 0 0 50%); }.comparison-divider { position: absolute; top: 0; bottom: 0; left: 50%; z-index: 2; width: 2px; background: #fff; box-shadow: 0 0 8px #79569d66; }.comparison-handle { position: absolute; top: 50%; left: 50%; z-index: 3; display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid #ffffffcc; border-radius: 50%; color: #fff; background: #765590c9; box-shadow: 0 5px 12px #5d406333; font-size: 15px; transform: translate(-50%, -50%); }.comparison-range { position: absolute; z-index: 4; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; }.comparison-label { position: absolute; bottom: 10px; z-index: 3; padding: 5px 8px; border-radius: 8px; color: #fff; background: #5d486fcc; font-size: 10px; }.comparison-label.before { left: 10px; }.comparison-label.after { right: 10px; }.comparison-selector { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; margin-top: 11px; }.comparison-selector button { min-height: 30px; padding: 5px 10px; border: 1px solid #e3d6ef; border-radius: 999px; color: #806095; background: #fff; font-size: 10px; }.comparison-selector button[aria-pressed="true"] { border-color: #9d79ba; color: #fff; background: #9d79ba; }.comparison-note { margin: 10px 2px 0; color: #84798c; font-size: 10px; line-height: 1.6; text-align: center; }
 .back-button { display: block; width: fit-content; margin: 18px auto 0; padding: 10px 14px; border: 1px solid #dfd1ec; border-radius: 999px; color: #7d5c99; background: #ffffffa8; font-size: 12px; text-decoration: none; }
 .footer { margin: 19px 8px 0; color: #968a9f; font-size: 10px; line-height: 1.8; text-align: center; }
 
@@ -186,7 +186,7 @@ h1 { margin: 8px 0 7px; color: #564268; font-size: clamp(22px, 6vw, 30px); font-
 
   <section id="summary" class="summary" aria-live="polite"><h2>今回の反映</h2><p id="summary-copy"></p><div class="mini-row"><div class="mini"><span>赤みの見え方</span><strong id="score-red">—</strong></div><div class="mini"><span>明るさ</span><strong id="score-light">—</strong></div><div class="mini"><span>アバター</span><strong>更新済み</strong></div></div></section>
 
-  <section class="analysis-panel" aria-labelledby="analysis-title"><div class="analysis-head"><div><h2 id="analysis-title">肌印象の変化</h2><p>このページで生成したアバターの展示用履歴です。</p></div><button class="compare-button" id="compare-button" type="button" disabled>前回と比較</button></div><div class="history-chart" id="history-chart" role="img" aria-label="まだ分析履歴はありません"></div><p class="chart-legend">棒の高さ：赤み・乾きの見え方を合わせた展示用スコア。診断値ではありません。</p><div class="comparison" id="comparison" hidden><div class="avatar-compare-card"><span>前回</span><div class="comparison-avatar" id="previous-avatar"></div><strong id="previous-label">—</strong></div><span class="compare-arrow" aria-hidden="true">→</span><div class="avatar-compare-card"><span>今回</span><div class="comparison-avatar" id="current-avatar"></div><strong id="current-label">—</strong></div></div></section>
+  <section class="analysis-panel" aria-labelledby="analysis-title"><div class="analysis-head"><div><h2 id="analysis-title">肌印象の変化</h2><p>このページで生成したアバターの展示用履歴です。</p></div><button class="compare-button" id="compare-button" type="button" disabled>前回と比較</button></div><div class="history-chart" id="history-chart" role="img" aria-label="まだ分析履歴はありません"></div><p class="chart-legend">棒の高さ：赤み・乾きの見え方を合わせた展示用スコア。診断値ではありません。</p><div class="comparison" id="comparison" hidden><div class="comparison-stage" id="comparison-stage"><div class="comparison-layer" id="comparison-before"></div><div class="comparison-layer comparison-after" id="comparison-after"></div><div class="comparison-divider" id="comparison-divider"></div><div class="comparison-handle" id="comparison-handle" aria-hidden="true">◁▷</div><span class="comparison-label before" id="comparison-before-label">前回</span><span class="comparison-label after">今回</span><input class="comparison-range" id="comparison-range" type="range" min="0" max="100" value="50" aria-label="過去と今回のアバターの表示位置"></div><div class="comparison-selector" id="comparison-selector" aria-label="比較する過去のアバターを選択"></div><p class="comparison-note" id="comparison-note"></p></div></section>
 
   <a class="back-button" href="rinzme_photo_flow.html">← 最初の画面に戻る</a>
   <footer class="footer">肌の状態が気になる場合や症状が続く場合は、医療機関へご相談ください。<br>RINZME Prototype · Photo stays on this device</footer>
@@ -199,7 +199,9 @@ let stream = null;
 let photoUrl = null;
 let latestAnalysis = null;
 let analysisHistory = [];
-let previousAvatarSnapshot = null;
+let avatarHistory = [];
+let comparisonBaseIndex = null;
+let snapshotSequence = 0;
 
 function setStatus(message, emphasized = "") {
   $("#status").innerHTML = emphasized ? `<strong>${emphasized}</strong> ${message}` : message;
@@ -330,9 +332,60 @@ function createAvatarSnapshot(prefix) {
   return snapshot;
 }
 
+function relativeHistoryLabel(index) {
+  const distance = avatarHistory.length - 1 - index;
+  if (distance === 0) return "今回";
+  if (distance === 1) return "前回";
+  if (distance === 2) return "前々回";
+  return `${distance}回前`;
+}
+
+function updateComparisonSlider(value) {
+  $("#comparison-after").style.clipPath = `inset(0 0 0 ${value}%)`;
+  $("#comparison-divider").style.left = `${value}%`;
+  $("#comparison-handle").style.left = `${value}%`;
+}
+
+function renderComparison() {
+  const latestIndex = avatarHistory.length - 1;
+  if (latestIndex < 1) return;
+
+  if (comparisonBaseIndex == null || comparisonBaseIndex >= latestIndex) {
+    comparisonBaseIndex = latestIndex - 1;
+  }
+
+  const base = avatarHistory[comparisonBaseIndex];
+  const latest = avatarHistory[latestIndex];
+  $("#comparison-before").innerHTML = base.snapshot;
+  $("#comparison-after").innerHTML = latest.snapshot;
+  $("#comparison-before-label").textContent = relativeHistoryLabel(comparisonBaseIndex);
+  $("#comparison-note").textContent = `${relativeHistoryLabel(comparisonBaseIndex)}の印象と今回の印象を、中央のスライダーで見比べられます。`;
+
+  const startIndex = Math.max(0, latestIndex - 3);
+  $("#comparison-selector").innerHTML = avatarHistory
+    .slice(startIndex, latestIndex)
+    .map((item, offset) => {
+      const index = startIndex + offset;
+      return `<button type="button" data-history-index="${index}" aria-pressed="${String(index === comparisonBaseIndex)}">${relativeHistoryLabel(index)}</button>`;
+    })
+    .join("");
+
+  $("#comparison-selector").querySelectorAll("[data-history-index]").forEach(button => {
+    button.addEventListener("click", () => {
+      comparisonBaseIndex = Number(button.dataset.historyIndex);
+      renderComparison();
+    });
+  });
+
+  $("#comparison-range").value = "50";
+  updateComparisonSlider(50);
+}
+
 function renderAnalysis(redness, dryness, title) {
   const score = Math.round((redness * .65 + dryness * .35) * 100);
   analysisHistory = [...analysisHistory, { score, title }].slice(-7);
+  const snapshot = createAvatarSnapshot(`history-${snapshotSequence++}`);
+  avatarHistory = [...avatarHistory, { title, snapshot: snapshot.outerHTML }].slice(-7);
 
   $("#history-chart").innerHTML = analysisHistory.map((item, index) => `
     <div class="chart-point">
@@ -346,18 +399,13 @@ function renderAnalysis(redness, dryness, title) {
     `肌印象の展示用スコア履歴：${analysisHistory.map(item => item.score).join("、")}`
   );
 
-  const currentSnapshot = createAvatarSnapshot("current");
-  $("#current-avatar").replaceChildren(currentSnapshot);
-  $("#current-label").textContent = title;
-
-  const hasPrevious = previousAvatarSnapshot && latestAnalysis;
+  const hasPrevious = avatarHistory.length > 1;
   $("#compare-button").disabled = !hasPrevious;
 
   if (hasPrevious) {
-    $("#previous-avatar").replaceChildren(previousAvatarSnapshot);
-    $("#previous-label").textContent = latestAnalysis.title;
     $("#comparison").hidden = false;
     $("#compare-button").textContent = "比較を閉じる";
+    renderComparison();
   } else {
     $("#compare-button").textContent = "前回と比較";
   }
@@ -371,14 +419,15 @@ $("#compare-button").addEventListener("click", () => {
   $("#compare-button").textContent = comparison.hidden
     ? "前回と比較"
     : "比較を閉じる";
+  if (!comparison.hidden) renderComparison();
+});
+
+$("#comparison-range").addEventListener("input", event => {
+  updateComparisonSlider(event.currentTarget.value);
 });
 
 function level(value, low, mid, labels) { return value < low ? labels[0] : value < mid ? labels[1] : labels[2]; }
 function updateAvatar(redness, lightness, dryness) {
-  if (latestAnalysis) {
-    previousAvatarSnapshot = createAvatarSnapshot("previous");
-  }
-
   const cheekOpacity = (.10 + redness * .62).toFixed(2);
   $("#left-cheek").setAttribute("opacity", cheekOpacity); $("#right-cheek").setAttribute("opacity", cheekOpacity);
   $("#nose-red").setAttribute("opacity", (.04 + redness * .38).toFixed(2));
