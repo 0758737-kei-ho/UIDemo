@@ -25,8 +25,10 @@ a:focus-visible, button:focus-visible { outline:3px solid #b899d1; outline-offse
 .capture-cta { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:15px 16px; border:1px solid #e7daf1; border-radius:18px; background:linear-gradient(135deg,#f5edfb,#fdfaff); }.capture-cta div { min-width:0; }.capture-cta strong { display:block; color:#665077; font-size:13px; }.capture-cta p { margin:4px 0 0; color:var(--muted); font-size:10px; line-height:1.55; }.round-arrow { display:grid; flex:0 0 auto; place-items:center; width:39px; height:39px; border-radius:50%; color:white; background:#9472b3; font-size:19px; }
 .controls { margin-top:18px; }.voice-controls { display:flex; align-items:center; justify-content:center; gap:24px; }.icon-button { display:grid; place-items:center; width:42px; height:42px; border:1px solid #e8def1; border-radius:50%; color:#8d73a6; background:#ffffffa6; }.icon-button svg { width:20px; height:20px; }.mic { display:grid; place-items:center; width:68px; height:68px; border:0; border-radius:50%; color:white; background:linear-gradient(145deg,#b797d0,#8c6aad); box-shadow:0 8px 26px #9b79bc35,inset 0 1px 2px #ffffff55; }.mic svg { width:26px; height:26px; }.mic.active { background:linear-gradient(145deg,#c59bba,#aa78a5); animation:pulse 1.2s infinite; }.hint { margin:13px 0 9px; color:#91869f; font-size:11px; text-align:center; }.text-form { display:flex; gap:8px; margin-top:12px; }.text-form[hidden] { display:none; }.text-form input { flex:1; min-width:0; padding:12px 14px; border:1px solid var(--line); border-radius:13px; color:var(--ink); background:#fff; }.send { padding:0 15px; border:0; border-radius:13px; color:#fff; background:#9672bd; font-size:12px; font-weight:700; }@keyframes pulse { 50% { box-shadow:0 0 0 10px #b58ac51a; } }
 .footer { margin-top:auto; padding-top:17px; color:var(--muted); font-size:9px; line-height:1.8; text-align:center; }
+.splash,.onboarding { position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:24px; background:radial-gradient(ellipse at 50% 35%,#eadcf8 0%,#f8f6fc 58%,#ffffff 100%); }.splash { transition:opacity .45s ease,visibility .45s ease; }.splash.done { visibility:hidden; opacity:0; }.splash-mark { position:relative; display:grid; place-items:center; width:144px; height:144px; border-radius:50%; background:radial-gradient(circle at 34% 25%,#fff 0 6%,#f8efff 22%,#d8bafa 58%,#a980cb 100%); box-shadow:inset 10px 8px 20px #fff9,inset -14px -16px 28px #6d4c8d33,0 0 38px #caa2f385; animation:splash-float 1.6s ease-in-out infinite; }.splash-mark::before { width:8px; height:10px; border-radius:50%; background:#fff; box-shadow:41px 0 #fff; content:""; }.splash-mark::after { position:absolute; top:79px; width:25px; height:13px; border-bottom:3px solid #fff; border-radius:0 0 50% 50%; content:""; }.splash-content { text-align:center; }.splash-name { margin:22px 0 5px; color:#654984; font-size:25px; font-weight:700; letter-spacing:4px; }.splash-sub { color:#9e82b5; font-size:9px; font-weight:700; letter-spacing:2px; }.splash-loading { width:88px; height:2px; margin:22px auto 0; overflow:hidden; border-radius:2px; background:#e4d8ef; }.splash-loading::before { display:block; width:40%; height:100%; border-radius:inherit; background:#9b79bc; animation:splash-loading 1.2s ease-in-out infinite; content:""; }@keyframes splash-float { 50% { transform:translateY(-7px) scale(1.03); } }@keyframes splash-loading { 0% { transform:translateX(-110%); } 100% { transform:translateX(280%); } }
+.onboarding { visibility:hidden; opacity:0; transition:opacity .35s ease,visibility .35s ease; }.onboarding.open { visibility:visible; opacity:1; }.onboarding-card { width:min(100%,390px); padding:28px 23px 22px; border:1px solid #fff; border-radius:27px; background:#ffffffdf; box-shadow:0 20px 60px #76539420; text-align:center; }.onboarding-visual { display:grid; place-items:center; width:104px; height:104px; margin:0 auto 19px; border-radius:29px; color:#8761aa; background:linear-gradient(145deg,#f3eafb,#e3d3f2); font-size:48px; }.onboarding-step { color:#a080b9; font-size:10px; font-weight:700; letter-spacing:1.5px; }.onboarding h2 { margin:8px 0; color:#59456d; font-size:20px; font-weight:600; }.onboarding p { margin:0; color:#80758c; font-size:12px; line-height:1.8; }.onboarding-dots { display:flex; justify-content:center; gap:7px; margin:20px 0; }.onboarding-dots i { width:7px; height:7px; border-radius:50%; background:#ddd1e8; }.onboarding-dots i.on { width:20px; border-radius:8px; background:#9b79bc; }.onboarding-actions { display:flex; gap:9px; }.onboarding-actions button { min-height:45px; border:0; border-radius:13px; font-size:12px; font-weight:700; }.onboarding-skip { flex:1; color:#806095; background:#f2ecf8; }.onboarding-next { flex:2; color:#fff; background:linear-gradient(135deg,#ad8bca,#8562a4); }
 @media (max-width:360px) { .app{padding-inline:14px}.environment span{padding:6px 8px}.companion-stage{height:236px}.fairy{transform:scale(.92)}.capture-cta{padding:13px}.intro h1{font-size:22px} }
-@media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; } }
+@media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; } .splash,.onboarding { transition:none; } }
 </style>
 </head>
 <body>
@@ -54,6 +56,8 @@ a:focus-visible, button:focus-visible { outline:3px solid #b899d1; outline-offse
 
   <footer class="footer">医療診断は行いません。写真はアバター生成時のみ端末内で扱います。<br>RINZME Prototype</footer>
 </main>
+<div class="splash" id="splash" role="status" aria-label="RINZMEを起動しています"><div class="splash-content"><div class="splash-mark" aria-hidden="true"></div><div class="splash-name">RINZME</div><div class="splash-sub">SKIN COMPANION</div><div class="splash-loading" aria-hidden="true"></div></div></div>
+<section class="onboarding" id="onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-title" aria-describedby="onboarding-text" hidden><div class="onboarding-card"><div class="onboarding-visual" id="onboarding-visual" aria-hidden="true">✦</div><div class="onboarding-step" id="onboarding-step">STEP 1 / 2</div><h2 id="onboarding-title">肌のことを、気軽に話そう</h2><p id="onboarding-text">文字や音声で、その日の肌の印象をRINZMEに伝えられます。</p><div class="onboarding-dots" aria-hidden="true"><i class="on"></i><i></i></div><div class="onboarding-actions"><button class="onboarding-skip" id="onboarding-skip" type="button">スキップ</button><button class="onboarding-next" id="onboarding-next" type="button">次へ</button></div></div></section>
 <script>
 "use strict";
 const $ = selector => document.querySelector(selector);
@@ -83,6 +87,39 @@ $("#mic-button").addEventListener("click", () => {
   recognition.onend = stopListening;
   try { recognition.start(); } catch { stopListening(); }
 });
+
+const onboardingPages = [
+  { icon: "✦", step: "STEP 1 / 2", title: "肌のことを、気軽に話そう", text: "文字や音声で、その日の肌の印象をRINZMEに伝えられます。", action: "次へ" },
+  { icon: "◌", step: "STEP 2 / 2", title: "写真からアバターをつくろう", text: "写真を撮影または選択すると、肌の印象をアバターと比較表示へ反映します。", action: "はじめる" }
+];
+let onboardingIndex = 0;
+function renderOnboarding() {
+  const page = onboardingPages[onboardingIndex];
+  $("#onboarding-visual").textContent = page.icon;
+  $("#onboarding-step").textContent = page.step;
+  $("#onboarding-title").textContent = page.title;
+  $("#onboarding-text").textContent = page.text;
+  $("#onboarding-next").textContent = page.action;
+  document.querySelectorAll(".onboarding-dots i").forEach((dot, index) => dot.classList.toggle("on", index === onboardingIndex));
+}
+function closeOnboarding() {
+  $("#onboarding").classList.remove("open");
+  $("#onboarding").hidden = true;
+  $("#text-button").focus();
+}
+$("#onboarding-skip").addEventListener("click", closeOnboarding);
+$("#onboarding-next").addEventListener("click", () => {
+  if (onboardingIndex === onboardingPages.length - 1) { closeOnboarding(); return; }
+  onboardingIndex++;
+  renderOnboarding();
+});
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+window.setTimeout(() => {
+  $("#splash").classList.add("done");
+  $("#onboarding").hidden = false;
+  $("#onboarding").classList.add("open");
+  $("#onboarding-next").focus();
+}, reducedMotion ? 250 : 1450);
 </script>
 </body>
 </html>
