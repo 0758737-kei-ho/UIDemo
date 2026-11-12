@@ -53,6 +53,7 @@ h1 { margin: 8px 0 7px; color: #564268; font-size: clamp(22px, 6vw, 30px); font-
 .viewfinder.has-preview video { display: none; }
 .viewfinder.has-preview img { display: block; }
 .viewfinder.generated img, .viewfinder.generated .guide { display: none; }
+.viewfinder #avatar .avatar-layer { display: block; width: 100%; height: 100%; }
 .placeholder { position: absolute; inset: 0; display: grid; place-items: center; padding: 32px; text-align: center; color: #735b88; background: radial-gradient(circle at 50% 24%, #faf6ff 0%, #e7d9f1 44%, #d9c8e6 100%); }
 .placeholder svg { width: 95px; height: 95px; margin-bottom: 10px; }
 .placeholder strong { display: block; font-size: 15px; }
@@ -67,7 +68,7 @@ h1 { margin: 8px 0 7px; color: #564268; font-size: clamp(22px, 6vw, 30px); font-
 .analysis-chip { position: absolute; right: 12px; bottom: 12px; display: none; align-items: center; gap: 7px; padding: 8px 10px; border-radius: 13px; color: #fff; background: rgba(65,49,78,.72); backdrop-filter: blur(10px); font-size: 10px; }
 .analysis-chip::before { width: 7px; height: 7px; border-radius: 50%; background: #b9efdc; box-shadow: 0 0 8px #b9efdc; content: ""; }
 .viewfinder.analyzed .analysis-chip { display: flex; }
-.viewfinder #avatar.in-viewfinder { position: absolute; z-index: 3; top: 14%; left: 50%; width: auto; max-width: 78%; height: 66%; margin: 0; transform: translateX(-50%); filter: drop-shadow(0 16px 18px rgba(83, 54, 108, .25)); }
+.viewfinder #avatar.in-viewfinder { position: absolute; z-index: 3; top: 14%; left: 50%; width: min(68%, 330px); height: auto; aspect-ratio: 1009 / 1261; margin: 0; transform: translateX(-50%); filter: drop-shadow(0 16px 18px rgba(83, 54, 108, .25)); }
 
 .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; padding: 13px; }
 .btn { min-height: 47px; border: 0; border-radius: 14px; color: white; background: linear-gradient(135deg, #ad8bca, #8562a4); box-shadow: 0 8px 18px rgba(130, 92, 164, .2); font-size: 13px; font-weight: 700; }
@@ -87,6 +88,11 @@ h1 { margin: 8px 0 7px; color: #564268; font-size: clamp(22px, 6vw, 30px); font-
 .avatar-area { position: relative; display: grid; grid-template-columns: 150px 1fr; align-items: center; min-height: 178px; margin: 7px 0 13px; }
 .avatar-orbit { position: absolute; left: 2px; width: 145px; height: 145px; border: 1px solid #d9c4ed; border-radius: 50%; box-shadow: inset 0 0 20px #eadbfa, 0 0 28px #d9c4ed55; }
 #avatar { position: relative; width: 150px; height: 170px; filter: drop-shadow(0 10px 13px rgba(127,91,160,.2)); }
+#avatar.avatar-snapshot { width: 176px; height: 228px; filter: drop-shadow(0 12px 12px rgba(108, 77, 135, .16)); }
+.legacy-avatar { display: none; }
+.avatar-layer { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.avatar-layer.blush, .avatar-layer.nose, .avatar-layer.shadow, .avatar-layer.stress, .avatar-layer.mole { opacity: 0; transition: opacity .35s ease; }
+.avatar-layer.normal { opacity: 1; transition: opacity .35s ease; }
 .avatar-copy { padding-left: 8px; }
 .avatar-copy strong { display: block; color: #665077; font-size: 15px; line-height: 1.55; }
 .avatar-copy p { margin: 8px 0 0; color: #84798c; font-size: 11px; line-height: 1.75; }
@@ -94,6 +100,8 @@ h1 { margin: 8px 0 7px; color: #564268; font-size: clamp(22px, 6vw, 30px); font-
 .factor { display: inline-flex; align-items: center; gap: 5px; padding: 7px 9px; border: 1px solid #e8deef; border-radius: 999px; color: #735e83; background: #fff; font-size: 10px; }
 .factor b { color: #a1687e; font-weight: 700; }
 .factor.mint b { color: #418981; }
+.stress-control { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin-top: 12px; padding: 11px 12px; border: 1px solid #e8deef; border-radius: 13px; background: #fff; }
+.stress-control label { color: #70587f; font-size: 11px; font-weight: 700; }.stress-control input { width: 100%; accent-color: #9b79bc; }.stress-control output { min-width: 36px; color: #85639f; font-size: 11px; text-align: right; }
 .notice { margin-top: 14px; padding: 11px 12px; border-radius: 12px; color: #776d7f; background: #f4eff8; font-size: 10px; line-height: 1.7; }
 .notice strong { color: #68527b; }
 .avatar-card.generated .avatar-area { display: block; min-height: 0; margin: 12px 0 13px; }
@@ -108,6 +116,7 @@ h1 { margin: 8px 0 7px; color: #564268; font-size: clamp(22px, 6vw, 30px); font-
 .mini { padding: 9px 5px; border-radius: 10px; text-align: center; background: #f8f4fb; }
 .mini span { display: block; color: #897d93; font-size: 9px; }.mini strong { color: #75568f; font-size: 13px; }
 .analysis-panel { margin-top: 13px; padding: 16px; border: 1px solid #eaddec; border-radius: 18px; background: #ffffffc7; }.analysis-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }.analysis-head h2 { margin: 0; color: #5b476d; font-size: 14px; }.analysis-head p { margin: 4px 0 0; color: #84798c; font-size: 10px; }.compare-button { flex: 0 0 auto; min-height: 34px; padding: 7px 10px; border: 1px solid #decdec; border-radius: 10px; color: #75568f; background: #f7f2fa; font-size: 10px; }.compare-button:disabled { opacity: .55; cursor: not-allowed; }.history-chart { display: flex; align-items: end; gap: 8px; height: 118px; margin: 15px 0 6px; padding: 5px 4px 0; border-bottom: 1px solid #e8deef; }.chart-point { position: relative; display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: end; height: 100%; min-width: 22px; }.chart-bar { width: min(25px, 74%); min-height: 5px; border-radius: 8px 8px 0 0; background: linear-gradient(#e8b6c5, #a67bc0); }.chart-value { margin-bottom: 4px; color: #875f9e; font-size: 9px; }.chart-label { margin-top: 7px; color: #968a9f; font-size: 9px; }.chart-legend { margin: 9px 0 0; color: #84798c; font-size: 10px; line-height: 1.6; }.comparison { margin-top: 15px; padding-top: 14px; border-top: 1px solid #eee5f3; }.comparison[hidden] { display: none; }.comparison-stage { position: relative; height: 248px; overflow: hidden; border-radius: 16px; background: radial-gradient(circle at 50% 30%, #faf7fe, #e7d9f1); touch-action: none; }.comparison-layer { position: absolute; inset: 0; display: grid; place-items: center; }.comparison-layer svg { width: 176px; height: 228px; filter: drop-shadow(0 12px 12px rgba(108, 77, 135, .16)); }.comparison-after { clip-path: inset(0 0 0 50%); }.comparison-divider { position: absolute; top: 0; bottom: 0; left: 50%; z-index: 2; width: 2px; background: #fff; box-shadow: 0 0 8px #79569d66; }.comparison-handle { position: absolute; top: 50%; left: 50%; z-index: 3; display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid #ffffffcc; border-radius: 50%; color: #fff; background: #765590c9; box-shadow: 0 5px 12px #5d406333; font-size: 15px; transform: translate(-50%, -50%); }.comparison-range { position: absolute; z-index: 4; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; }.comparison-label { position: absolute; bottom: 10px; z-index: 3; padding: 5px 8px; border-radius: 8px; color: #fff; background: #5d486fcc; font-size: 10px; }.comparison-label.before { left: 10px; }.comparison-label.after { right: 10px; }.comparison-selector { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; margin-top: 11px; }.comparison-selector button { min-height: 30px; padding: 5px 10px; border: 1px solid #e3d6ef; border-radius: 999px; color: #806095; background: #fff; font-size: 10px; }.comparison-selector button[aria-pressed="true"] { border-color: #9d79ba; color: #fff; background: #9d79ba; }.comparison-note { margin: 10px 2px 0; color: #84798c; font-size: 10px; line-height: 1.6; text-align: center; }
+.comparison-layer .avatar-snapshot { position: relative; width: 176px; height: 228px; filter: drop-shadow(0 12px 12px rgba(108, 77, 135, .16)); }
 .back-button { display: block; width: fit-content; margin: 18px auto 0; padding: 10px 14px; border: 1px solid #dfd1ec; border-radius: 999px; color: #7d5c99; background: #ffffffa8; font-size: 12px; text-decoration: none; }
 .footer { margin: 19px 8px 0; color: #968a9f; font-size: 10px; line-height: 1.8; text-align: center; }
 
@@ -140,7 +149,7 @@ h1 { margin: 8px 0 7px; color: #564268; font-size: clamp(22px, 6vw, 30px); font-
       <video id="camera" autoplay muted playsinline aria-label="カメラプレビュー"></video>
       <img id="photo" alt="選択または撮影した顔写真のプレビュー">
       <div class="guide" aria-hidden="true"><div class="face-guide"></div><div class="eye-line"></div><i class="eye-dot left"></i><i class="eye-dot right"></i><div class="guide-label">顔と目を枠に合わせてね</div></div>
-      <div class="analysis-chip">アバターに反映しました</div>
+      <div class="analysis-chip" id="analysis-chip">アバターに反映しました</div>
     </div>
     <div class="actions">
       <button class="btn" id="open-camera" type="button">📷 カメラを起動</button>
@@ -156,7 +165,7 @@ h1 { margin: 8px 0 7px; color: #564268; font-size: clamp(22px, 6vw, 30px); font-
     <div class="card-heading"><div><h2 id="avatar-heading">いまの肌アバター</h2><p>写真から得た展示用の印象を、やさしく可視化します。</p></div><span class="demo-tag">診断ではありません</span></div>
     <div class="avatar-area">
       <div class="avatar-orbit" aria-hidden="true"></div>
-      <svg id="avatar" viewBox="16 4 128 174" role="img" aria-label="落ち着いた肌状態を表すアバター">
+      <svg class="legacy-avatar" viewBox="16 4 128 174" aria-hidden="true">
         <defs>
           <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffe6d4"/><stop offset="1" stop-color="#efb89f"/></linearGradient>
           <radialGradient id="blush"><stop stop-color="#ef8495" stop-opacity=".82"/><stop offset="1" stop-color="#ef8495" stop-opacity="0"/></radialGradient>
@@ -165,7 +174,7 @@ h1 { margin: 8px 0 7px; color: #564268; font-size: clamp(22px, 6vw, 30px); font-
         <path d="M26 178c3-34 22-52 54-52s51 18 54 52Z" fill="#aa8bca"/>
         <path d="M60 119h40v27c-7 8-33 8-40 0Z" fill="#eeb49a"/>
         <circle cx="38" cy="80" r="10" fill="#efb79e"/><circle cx="122" cy="80" r="10" fill="#efb79e"/>
-        <ellipse cx="80" cy="78" rx="45" ry="53" fill="url(#skin)"/>
+        <ellipse id="skin-base" cx="80" cy="78" rx="45" ry="53" fill="url(#skin)"/>
         <path d="M35 70c0-39 20-61 47-61 31 0 46 24 43 62-12-17-28-25-47-25-19 0-32 8-43 24Z" fill="#594562"/>
         <path d="M38 58c11-31 33-42 53-40-13 10-17 26-13 39-12-7-26-7-40 1Z" fill="#70567a"/>
         <ellipse id="left-cheek" cx="53" cy="95" rx="25" ry="17" fill="url(#blush)" opacity=".1"/>
@@ -176,11 +185,24 @@ h1 { margin: 8px 0 7px; color: #564268; font-size: clamp(22px, 6vw, 30px); font-
         <path d="M71 108q9 8 18 0" fill="none" stroke="#b86979" stroke-width="3" stroke-linecap="round"/>
         <g id="dry-lines" fill="none" stroke="#ce9386" stroke-width="1.2" stroke-linecap="round" opacity=".08"><path d="M42 95l9 4m-10 3 9 2m69-9-9 4m10 3-9 2"/></g>
         <g id="spots" fill="#c76279" opacity="0"><circle cx="47" cy="104" r="2.1"/><circle cx="56" cy="111" r="1.5"/><circle cx="113" cy="105" r="2.1"/><circle cx="104" cy="112" r="1.5"/></g>
-        <ellipse cx="59" cy="39" rx="14" ry="6" fill="#fff" opacity=".18" transform="rotate(-28 59 39)"/>
+        <ellipse id="skin-shine" cx="59" cy="39" rx="14" ry="6" fill="#fff" opacity=".18" transform="rotate(-28 59 39)"/>
       </svg>
+      <div id="avatar" role="img" aria-label="落ち着いた肌状態を表すアバター">
+        <img class="avatar-layer main" src="../src/test_avator/main.PNG" alt="">
+        <img class="avatar-layer shadow" id="avatar-shadow" src="../src/test_avator/shadow.PNG" alt="">
+        <img class="avatar-layer blush" id="avatar-blush" src="../src/test_avator/blush.PNG" alt="">
+        <img class="avatar-layer nose" id="avatar-nose" src="../src/test_avator/nose_red.PNG" alt="">
+        <img class="avatar-layer mole" id="avatar-mole-low" src="../src/test_avator/mole_low.PNG" alt="">
+        <img class="avatar-layer mole" id="avatar-mole-medium" src="../src/test_avator/mole_medium.PNG" alt="">
+        <img class="avatar-layer mole" id="avatar-mole-high" src="../src/test_avator/mole_High.PNG" alt="">
+        <img class="avatar-layer normal" id="avatar-normal" src="../src/test_avator/normal.PNG" alt="">
+        <img class="avatar-layer stress" id="avatar-stress" src="../src/test_avator/stress.PNG" alt="">
+      </div>
       <div class="avatar-copy"><strong id="avatar-title">やわらかく、落ち着いた印象</strong><p id="avatar-copy">写真を追加すると、頬の赤み・乾燥の見え方をアバターに反映します。</p></div>
     </div>
     <div class="factors" aria-label="アバターの反映項目"><span class="factor">赤み <b id="redness">低め</b></span><span class="factor mint">うるおい感 <b id="hydration">保たれています</b></span><span class="factor">刺激の見え方 <b id="sensitivity">目立ちにくい</b></span></div>
+    <div class="stress-control"><label for="stress-input">ストレス</label><input id="stress-input" type="range" min="0" max="10" value="4" aria-describedby="stress-note"><output id="stress-value" for="stress-input">4 / 10</output></div>
+    <span class="sr-only" id="stress-note">7以上でストレス表情を表示します</span>
     <div class="notice"><strong>この画面について：</strong>画像はブラウザ内で読み取り、サーバーに送信・保存しません。表示は写真の色味をもとにしたプロトタイプ表現で、医療的な診断・判定ではありません。</div>
   </section>
 
@@ -202,6 +224,7 @@ let analysisHistory = [];
 let avatarHistory = [];
 let comparisonBaseIndex = null;
 let snapshotSequence = 0;
+let stressLevel = 4;
 
 function setStatus(message, emphasized = "") {
   $("#status").innerHTML = emphasized ? `<strong>${emphasized}</strong> ${message}` : message;
@@ -238,7 +261,6 @@ async function openCamera() {
     $("#camera").srcObject = stream;
     $("#viewfinder").classList.add("ready");
     $("#viewfinder").classList.remove("has-preview");
-    $("#capture-button").hidden = false;
     $("#open-camera").textContent = "📷 撮り直す";
     setStatus("顔と目の位置を白いガイドに合わせて、「この写真でアバターを更新」をタップしてください。", "カメラを起動しました。");
   } catch {
@@ -270,7 +292,7 @@ function usePhoto(url) {
 
 function analyzePhoto(url) {
   const image = new Image();
-  image.onload = () => {
+  image.onload = async () => {
     const canvas = document.createElement("canvas");
     const size = 96;
     canvas.width = size; canvas.height = size;
@@ -278,19 +300,80 @@ function analyzePhoto(url) {
     context.drawImage(image, 0, 0, size, size);
     const { data } = context.getImageData(0, 0, size, size);
     let red = 0, green = 0, blue = 0, samples = 0;
-    for (let y = 22; y < 82; y += 2) {
-      for (let x = 18; x < 78; x += 2) {
+    let faceBounds = { left: 18, right: 78, top: 22, bottom: 82 };
+
+    if ("FaceDetector" in window) {
+      try {
+        const detector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+        const [face] = await detector.detect(image);
+
+        if (face?.boundingBox) {
+          const { x, y, width, height } = face.boundingBox;
+          faceBounds = {
+            left: Math.max(0, Math.round(x / image.naturalWidth * size)),
+            right: Math.min(size, Math.round((x + width) / image.naturalWidth * size)),
+            top: Math.max(0, Math.round(y / image.naturalHeight * size)),
+            bottom: Math.min(size, Math.round((y + height) / image.naturalHeight * size))
+          };
+        }
+      } catch {
+        // ネイティブ顔検出が使えない場合は、ガイド領域で解析する。
+      }
+    }
+
+    const regionAverage = (startX, endX, startY, endY) => {
+      let regionRed = 0, regionGreen = 0, regionBlue = 0, regionSamples = 0;
+
+      for (let y = Math.max(0, Math.floor(startY)); y < Math.min(size, Math.ceil(endY)); y++) {
+        for (let x = Math.max(0, Math.floor(startX)); x < Math.min(size, Math.ceil(endX)); x++) {
+          const position = (y * size + x) * 4;
+          const r = data[position], g = data[position + 1], b = data[position + 2];
+
+          if (r > 45 && g > 25 && b > 15 && r > b * .95) {
+            regionRed += r;
+            regionGreen += g;
+            regionBlue += b;
+            regionSamples++;
+          }
+        }
+      }
+
+      if (!regionSamples) return { redness: .32, lightness: .58 };
+
+      return {
+        redness: Math.max(0, Math.min(1, ((regionRed / regionSamples - regionGreen / regionSamples) - 9) / 46)),
+        lightness: Math.max(0, Math.min(1, (regionRed + regionGreen + regionBlue) / (regionSamples * 255 * 3)))
+      };
+    };
+    for (let y = faceBounds.top; y < faceBounds.bottom; y += 2) {
+      for (let x = faceBounds.left; x < faceBounds.right; x += 2) {
         const position = (y * size + x) * 4;
         const r = data[position], g = data[position + 1], b = data[position + 2];
         if (r > 45 && g > 25 && b > 15 && r > b * .95) { red += r; green += g; blue += b; samples++; }
       }
     }
-    if (!samples) { updateAvatar(0.32, 0.58, 0.22); return; }
+    if (!samples) {
+      $("#analysis-chip").textContent = "顔を枠の中央に合わせてください";
+      updateAvatar(0.32, 0.58, 0.22);
+      return;
+    }
     const averageRed = red / samples, averageGreen = green / samples, averageBlue = blue / samples;
     const redness = Math.max(0, Math.min(1, ((averageRed - averageGreen) - 9) / 46));
     const lightness = Math.max(0, Math.min(1, (averageRed + averageGreen + averageBlue) / (255 * 3)));
     const dryness = Math.max(0, Math.min(1, (0.74 - lightness) * 1.4 + Math.max(0, averageRed - averageBlue - 30) / 110));
-    updateAvatar(redness, lightness, dryness);
+    const faceWidth = faceBounds.right - faceBounds.left;
+    const faceHeight = faceBounds.bottom - faceBounds.top;
+    const leftCheek = regionAverage(faceBounds.left + faceWidth * .05, faceBounds.left + faceWidth * .43, faceBounds.top + faceHeight * .40, faceBounds.top + faceHeight * .74);
+    const rightCheek = regionAverage(faceBounds.left + faceWidth * .57, faceBounds.left + faceWidth * .95, faceBounds.top + faceHeight * .40, faceBounds.top + faceHeight * .74);
+    const nose = regionAverage(faceBounds.left + faceWidth * .42, faceBounds.left + faceWidth * .58, faceBounds.top + faceHeight * .34, faceBounds.top + faceHeight * .64);
+    const qualityMessage = lightness < .32
+      ? "少し明るい場所で撮影すると精度が上がります"
+      : lightness > .85
+        ? "強い光を避けると印象を捉えやすくなります"
+        : "頬・鼻まわりの印象を反映しました";
+
+    $("#analysis-chip").textContent = qualityMessage;
+    updateAvatar(redness, lightness, dryness, { leftCheek, rightCheek, nose });
   };
   image.src = url;
 }
@@ -310,7 +393,8 @@ function createAvatarSnapshot(prefix) {
   snapshot.removeAttribute("id");
   snapshot.removeAttribute("role");
   snapshot.removeAttribute("aria-label");
-  snapshot.className.baseVal = "";
+  snapshot.classList.remove("in-viewfinder");
+  snapshot.classList.add("avatar-snapshot");
 
   snapshot.querySelectorAll("[id]").forEach(element => {
     const oldId = element.id;
@@ -427,12 +511,19 @@ $("#comparison-range").addEventListener("input", event => {
 });
 
 function level(value, low, mid, labels) { return value < low ? labels[0] : value < mid ? labels[1] : labels[2]; }
-function updateAvatar(redness, lightness, dryness) {
-  const cheekOpacity = (.10 + redness * .62).toFixed(2);
-  $("#left-cheek").setAttribute("opacity", cheekOpacity); $("#right-cheek").setAttribute("opacity", cheekOpacity);
-  $("#nose-red").setAttribute("opacity", (.04 + redness * .38).toFixed(2));
-  $("#dry-lines").setAttribute("opacity", (.06 + dryness * .62).toFixed(2));
-  $("#spots").setAttribute("opacity", redness > .58 ? ((redness - .55) * 1.7).toFixed(2) : "0");
+function updateAvatar(redness, lightness, dryness, regions = {}) {
+  const leftRedness = regions.leftCheek?.redness ?? redness;
+  const rightRedness = regions.rightCheek?.redness ?? redness;
+  const noseRedness = regions.nose?.redness ?? redness;
+
+  const blushStrength = Math.min(.9, .12 + ((leftRedness + rightRedness) / 2) * .78);
+  $("#avatar-blush").style.opacity = blushStrength.toFixed(2);
+  $("#avatar-nose").style.opacity = (.03 + noseRedness * .6).toFixed(2);
+  $("#avatar-shadow").style.opacity = (.06 + dryness * .42).toFixed(2);
+  const moleScore = redness * .7 + dryness * .3;
+  $("#avatar-mole-low").style.opacity = moleScore >= .35 && moleScore < .55 ? "1" : "0";
+  $("#avatar-mole-medium").style.opacity = moleScore >= .55 && moleScore < .75 ? "1" : "0";
+  $("#avatar-mole-high").style.opacity = moleScore >= .75 ? "1" : "0";
   const redLabel = level(redness, .28, .57, ["低め", "少し見えます", "目立ちやすい"]);
   const hydration = level(dryness, .3, .6, ["保たれています", "ゆらぎ気味", "乾きやすい印象"]);
   const sensitivity = level(redness + dryness * .35, .34, .69, ["目立ちにくい", "少しゆらぎ", "配慮したい印象"]);
@@ -449,6 +540,18 @@ function updateAvatar(redness, lightness, dryness) {
   renderAnalysis(redness, dryness, title);
 }
 
+function updateStressExpression() {
+  const stressed = stressLevel >= 7;
+  $("#avatar-stress").style.opacity = stressed ? "1" : "0";
+  $("#avatar-normal").style.opacity = stressed ? "0" : "1";
+  $("#stress-value").textContent = `${stressLevel} / 10`;
+}
+
+$("#stress-input").addEventListener("input", event => {
+  stressLevel = Number(event.target.value);
+  updateStressExpression();
+});
+
 $("#open-camera").addEventListener("click", openCamera);
 $("#capture-button").addEventListener("click", snapshot);
 $("#upload-button").addEventListener("click", () => $("#file-input").click());
@@ -459,6 +562,7 @@ $("#file-input").addEventListener("change", event => {
   if (file.size > 10 * 1024 * 1024) { setStatus("10MB以下の画像を選択してください。", "画像が大きすぎます。"); return; }
   usePhoto(URL.createObjectURL(file));
 });
+updateStressExpression();
 window.addEventListener("pagehide", stopCamera);
 document.addEventListener("visibilitychange", () => { if (document.hidden) stopCamera(); });
 </script>
