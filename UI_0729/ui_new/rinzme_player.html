@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>RINZME - 肌状態・コンディション診断プレイヤー</title>
+  <title>RINZME - フル音声コントロール＆肌状態診断プレイヤー</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap');
@@ -13,7 +13,6 @@
       color: #f8fafc;
       user-select: none;
     }
-    /* カメラスキャンライン演出 */
     @keyframes scanline {
       0% { transform: translateY(-100%); }
       100% { transform: translateY(100%); }
@@ -22,7 +21,6 @@
       background: linear-gradient(to bottom, transparent, rgba(56, 189, 248, 0.14), transparent);
       animation: scanline 2.8s linear infinite;
     }
-    /* シャッター瞬き演出 */
     @keyframes shutterBlink {
       0% { opacity: 0; }
       30% { opacity: 0.65; }
@@ -31,15 +29,34 @@
     .shutter-active {
       animation: shutterBlink 0.35s ease-out forwards;
     }
-    /* 半透明グラスモーフィズム */
+    @keyframes voiceWave {
+      0%, 100% { height: 6px; }
+      50% { height: 22px; }
+    }
+    .wave-bar {
+      width: 3px;
+      background-color: #38bdf8;
+      border-radius: 999px;
+      animation: voiceWave 0.9s ease-in-out infinite;
+    }
+    .wave-bar:nth-child(2) { animation-delay: 0.15s; }
+    .wave-bar:nth-child(3) { animation-delay: 0.3s; }
+    .wave-bar:nth-child(4) { animation-delay: 0.45s; }
+    .wave-bar:nth-child(5) { animation-delay: 0.2s; }
+
+    /* 音声認識ヒット時のボタン発光アニメーション */
+    .voice-selected-ring {
+      box-shadow: 0 0 0 3px #38bdf8, 0 0 24px rgba(56, 189, 248, 0.75) !important;
+      transform: scale(1.03);
+    }
+
     .glass-float {
-      background: rgba(15, 20, 28, 0.64);
+      background: rgba(15, 20, 28, 0.74);
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
       border: 1px solid rgba(255, 255, 255, 0.18);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
     }
-    /* カスタムスライダー */
     input[type="range"] {
       -webkit-appearance: none;
       background: rgba(255, 255, 255, 0.22);
@@ -62,33 +79,56 @@
   <!-- メインプレイヤーコンテナ -->
   <div class="relative w-full max-w-[420px] h-[820px] max-h-[95vh] bg-neutral-950 rounded-[36px] border border-white/10 shadow-2xl overflow-hidden flex flex-col justify-between">
     
-    <!-- トップステータスバー -->
-    <div class="absolute top-0 inset-x-0 z-30 flex items-center justify-between px-6 pt-5 pb-3 bg-gradient-to-b from-black/70 to-transparent pointer-events-none">
-      <div class="flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
-        <span class="tracking-[0.22em] font-semibold text-sm text-white/90">RINZME</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <span id="top-speed-pill" class="hidden text-[10px] px-2 py-0.5 rounded-full bg-sky-400/20 text-sky-300 border border-sky-400/30 font-mono">
-          1.0x
-        </span>
-        <div id="status-badge" class="text-[11px] px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-white/85 border border-white/10">
-          カメラプレビュー中
+    <!-- トップステータスバー ＋ 「音声入力 / 手動選択」切替ピル -->
+    <div class="absolute top-0 inset-x-0 z-30 flex flex-col gap-2.5 px-5 pt-4 pb-3 bg-gradient-to-b from-black/85 via-black/50 to-transparent">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+          <span class="tracking-[0.22em] font-semibold text-sm text-white/95">RINZME</span>
         </div>
+        <div class="flex items-center gap-1.5">
+          <span id="top-speed-pill" class="hidden text-[10px] px-2 py-0.5 rounded-full bg-sky-400/20 text-sky-300 border border-sky-400/30 font-mono">
+            1.0x
+          </span>
+          <div id="status-badge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-white/10 backdrop-blur-md text-white/85 border border-white/10">
+            カメラプレビュー中
+          </div>
+        </div>
+      </div>
+
+      <!-- 画面上部常駐：音声入力 / 手動選択 切替スイッチ -->
+      <div class="flex items-center justify-between bg-black/60 backdrop-blur-xl border border-white/15 rounded-full p-1">
+        <button onclick="setInputMode('manual')" id="top-mode-manual" class="flex-1 py-1.5 px-3 rounded-full text-xs font-semibold bg-white text-neutral-950 transition flex items-center justify-center gap-1.5 shadow">
+          <span>👆</span> 手動選択
+        </button>
+        <button onclick="setInputMode('voice')" id="top-mode-voice" class="flex-1 py-1.5 px-3 rounded-full text-xs font-medium text-white/80 hover:text-white transition flex items-center justify-center gap-1.5">
+          <span>🎙️</span> 音声入力
+        </button>
+      </div>
+
+      <!-- 音声認識ライブ字幕バー（音声入力モード時のみ表示） -->
+      <div id="voice-toast" class="hidden glass-float rounded-2xl px-3.5 py-2 flex items-center justify-between border-sky-400/40">
+        <div class="flex items-center gap-2 overflow-hidden">
+          <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping shrink-0"></span>
+          <span id="voice-transcript" class="text-xs text-sky-200 truncate">声で操作：「記録開始」「7時間半」「普通」「リプレイ」</span>
+        </div>
+        <button onclick="triggerContextTestVoice()" class="text-[10px] px-2.5 py-0.5 rounded-full bg-sky-400/20 text-sky-300 border border-sky-400/30 shrink-0 ml-2 hover:bg-sky-400/35">
+          テスト発話
+        </button>
       </div>
     </div>
 
     <!-- メイン画面（カメラ映像 / アップロード写真 / 診断結果オーバーレイ） -->
     <div class="relative flex-1 w-full h-full bg-neutral-900 overflow-hidden flex items-center justify-center">
       
-      <!-- 1. リアルタイムカメラ画面（模擬プレビュー＆実カメラ対応） -->
+      <!-- 1. リアルタイムカメラ画面 -->
       <div id="camera-feed" class="absolute inset-0 flex flex-col items-center justify-center z-0">
         <video id="real-camera" autoplay playsinline muted class="hidden absolute inset-0 w-full h-full object-cover scale-x-[-1]"></video>
-        <div id="mock-camera-bg" class="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,_#1e293b_0%,_#090d16_100%)]"></div>
+        <div id="mock-camera-bg" class="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,_#1e293b_0%,_#090d16_100%)]"></div>
         
         <!-- 顔位置ガイドフレーム -->
-        <div class="relative w-52 h-68 border border-dashed border-white/25 rounded-[105px] flex items-center justify-center pointer-events-none">
-          <div class="w-44 h-60 border border-white/10 rounded-[90px]"></div>
+        <div class="relative w-52 h-64 border border-dashed border-white/25 rounded-[105px] flex items-center justify-center pointer-events-none mt-8">
+          <div class="w-44 h-56 border border-white/10 rounded-[90px]"></div>
           <span class="absolute -bottom-6 text-[10px] tracking-[0.2em] text-white/35">FACE FRAME</span>
         </div>
 
@@ -103,7 +143,7 @@
       <div id="shutter-layer" class="pointer-events-none absolute inset-0 bg-black opacity-0 z-40"></div>
 
       <!-- 4. 半透明フローティングUIエリア（メイン画面中央） (z-20) -->
-      <div class="relative z-20 w-full px-5 flex flex-col items-center justify-center">
+      <div class="relative z-20 w-full px-5 flex flex-col items-center justify-center mt-10">
         
         <!-- ステップ 1：睡眠時間記録 -->
         <div id="card-sleep" class="hidden w-full glass-float rounded-3xl p-5 transition-all duration-300">
@@ -113,20 +153,37 @@
             </span>
             <span class="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-white/75 font-mono" id="sleep-timer">残り 06秒でスキップ</span>
           </div>
-          <p class="text-sm text-white/95 font-medium mb-3">昨晩の睡眠時間はどのくらいですか？</p>
-          <div class="flex items-baseline justify-center gap-1 my-2">
-            <span id="sleep-val-display" class="text-4xl font-bold text-white">7.5</span>
-            <span class="text-xs text-white/60">時間</span>
+          <p class="text-sm text-white/95 font-medium mb-2">昨晩の睡眠時間はどのくらいですか？</p>
+
+          <!-- 音声入力モード表示エリア -->
+          <div id="sleep-voice-box" class="hidden my-2 p-3.5 rounded-2xl bg-sky-500/15 border border-sky-400/40 flex flex-col items-center text-center">
+            <div class="flex items-center gap-1 h-6 mb-1.5">
+              <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+            </div>
+            <p class="text-xs text-sky-200 font-medium">声でお答えください（例：「7時間半」「6時間」）</p>
+            <div class="flex gap-1.5 mt-2.5">
+              <button onclick="simulateVoiceCommand('6時間')" class="text-[11px] px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white">🗣️「6時間」</button>
+              <button onclick="simulateVoiceCommand('7時間半')" class="text-[11px] px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white">🗣️「7時間半」</button>
+              <button onclick="simulateVoiceCommand('8時間')" class="text-[11px] px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white">🗣️「8時間」</button>
+            </div>
           </div>
-          <input type="range" id="sleep-slider" min="3" max="12" step="0.5" value="7.5" class="w-full my-3" />
-          <div class="flex justify-between text-[10px] text-white/45 mb-4">
-            <span>3時間</span>
-            <span>7.5時間</span>
-            <span>12時間</span>
+
+          <!-- 手動選択モード表示エリア -->
+          <div id="sleep-manual-box">
+            <div class="flex items-baseline justify-center gap-1 my-2">
+              <span id="sleep-val-display" class="text-4xl font-bold text-white">7.5</span>
+              <span class="text-xs text-white/60">時間</span>
+            </div>
+            <input type="range" id="sleep-slider" min="3" max="12" step="0.5" value="7.5" class="w-full my-3" />
+            <div class="flex justify-between text-[10px] text-white/45 mb-4">
+              <span>3時間</span>
+              <span>7.5時間</span>
+              <span>12時間</span>
+            </div>
+            <button onclick="confirmSleep()" class="w-full py-2.5 rounded-xl bg-sky-400/90 hover:bg-sky-400 text-neutral-950 font-semibold text-sm transition">
+              記録する
+            </button>
           </div>
-          <button onclick="confirmSleep()" class="w-full py-2.5 rounded-xl bg-sky-400/90 hover:bg-sky-400 text-neutral-950 font-semibold text-sm transition">
-            記録する
-          </button>
         </div>
 
         <!-- ステップ 2：ストレス指数記録 -->
@@ -137,52 +194,84 @@
             </span>
             <span class="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-white/75 font-mono" id="stress-timer">残り 06秒でスキップ</span>
           </div>
-          <p class="text-sm text-white/95 font-medium mb-4">現在のストレス状態を選択してください：</p>
-          <div class="grid grid-cols-5 gap-1.5 mb-4" id="stress-options">
-            <button onclick="selectStress(1, this)" class="stress-btn flex flex-col items-center py-2.5 px-1 rounded-2xl bg-white/5 border border-white/10 hover:border-amber-300/60 transition">
-              <span class="text-xl mb-1">😌</span>
-              <span class="text-[10px] text-white/80">穏やか</span>
-            </button>
-            <button onclick="selectStress(2, this)" class="stress-btn flex flex-col items-center py-2.5 px-1 rounded-2xl bg-white/5 border border-white/10 hover:border-amber-300/60 transition">
-              <span class="text-xl mb-1">🙂</span>
-              <span class="text-[10px] text-white/80">安定</span>
-            </button>
-            <button onclick="selectStress(3, this)" class="stress-btn flex flex-col items-center py-2.5 px-1 rounded-2xl bg-amber-400/25 border border-amber-300 transition">
-              <span class="text-xl mb-1">😐</span>
-              <span class="text-[10px] text-white/95">普通</span>
-            </button>
-            <button onclick="selectStress(4, this)" class="stress-btn flex flex-col items-center py-2.5 px-1 rounded-2xl bg-white/5 border border-white/10 hover:border-amber-300/60 transition">
-              <span class="text-xl mb-1">😣</span>
-              <span class="text-[10px] text-white/80">やや高い</span>
-            </button>
-            <button onclick="selectStress(5, this)" class="stress-btn flex flex-col items-center py-2.5 px-1 rounded-2xl bg-white/5 border border-white/10 hover:border-amber-300/60 transition">
-              <span class="text-xl mb-1">🤯</span>
-              <span class="text-[10px] text-white/80">高負荷</span>
+          <p class="text-sm text-white/95 font-medium mb-3">現在のストレス状態をお知らせください：</p>
+
+          <!-- 音声入力モード表示エリア -->
+          <div id="stress-voice-box" class="hidden my-2 p-3.5 rounded-2xl bg-amber-500/15 border border-amber-400/40 flex flex-col items-center text-center">
+            <div class="flex items-center gap-1 h-6 mb-1.5">
+              <div class="wave-bar !bg-amber-400"></div><div class="wave-bar !bg-amber-400"></div><div class="wave-bar !bg-amber-400"></div><div class="wave-bar !bg-amber-400"></div><div class="wave-bar !bg-amber-400"></div>
+            </div>
+            <p class="text-xs text-amber-200 font-medium">声でお答えください（例：「穏やか」「普通」「高い」）</p>
+            <div class="flex flex-wrap justify-center gap-1.5 mt-2.5">
+              <button onclick="simulateVoiceCommand('穏やか')" class="text-[11px] px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white">🗣️「穏やか」</button>
+              <button onclick="simulateVoiceCommand('普通')" class="text-[11px] px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white">🗣️「普通」</button>
+              <button onclick="simulateVoiceCommand('高い')" class="text-[11px] px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white">🗣️「高い」</button>
+            </div>
+          </div>
+
+          <!-- 手動選択モード表示エリア -->
+          <div id="stress-manual-box">
+            <div class="grid grid-cols-5 gap-1.5 mb-4" id="stress-options">
+              <button onclick="selectStress(1, this)" class="stress-btn flex flex-col items-center py-2.5 px-1 rounded-2xl bg-white/5 border border-white/10 hover:border-amber-300/60 transition">
+                <span class="text-xl mb-1">😌</span>
+                <span class="text-[10px] text-white/80">穏やか</span>
+              </button>
+              <button onclick="selectStress(2, this)" class="stress-btn flex flex-col items-center py-2.5 px-1 rounded-2xl bg-white/5 border border-white/10 hover:border-amber-300/60 transition">
+                <span class="text-xl mb-1">🙂</span>
+                <span class="text-[10px] text-white/80">安定</span>
+              </button>
+              <button onclick="selectStress(3, this)" class="stress-btn flex flex-col items-center py-2.5 px-1 rounded-2xl bg-amber-400/25 border border-amber-300 transition">
+                <span class="text-xl mb-1">😐</span>
+                <span class="text-[10px] text-white/95">普通</span>
+              </button>
+              <button onclick="selectStress(4, this)" class="stress-btn flex flex-col items-center py-2.5 px-1 rounded-2xl bg-white/5 border border-white/10 hover:border-amber-300/60 transition">
+                <span class="text-xl mb-1">😣</span>
+                <span class="text-[10px] text-white/80">やや高い</span>
+              </button>
+              <button onclick="selectStress(5, this)" class="stress-btn flex flex-col items-center py-2.5 px-1 rounded-2xl bg-white/5 border border-white/10 hover:border-amber-300/60 transition">
+                <span class="text-xl mb-1">🤯</span>
+                <span class="text-[10px] text-white/80">高負荷</span>
+              </button>
+            </div>
+            <button onclick="confirmStress()" class="w-full py-2.5 rounded-xl bg-amber-400/90 hover:bg-amber-400 text-neutral-950 font-semibold text-sm transition">
+              記録する
             </button>
           </div>
-          <button onclick="confirmStress()" class="w-full py-2.5 rounded-xl bg-amber-400/90 hover:bg-amber-400 text-neutral-950 font-semibold text-sm transition">
-            記録する
-          </button>
         </div>
 
-        <!-- ステップ 3：肌診断ポップアップ（動画内ポップアップ風） -->
+        <!-- ステップ 3：肌診断ポップアップ（音声認識によるボタン自動選択・実行対応） -->
         <div id="card-skin-popup" class="hidden w-full glass-float rounded-3xl p-5 border-rose-400/35 relative">
           <div class="flex items-center justify-between mb-2">
             <span class="text-[10px] tracking-wider px-2 py-0.5 rounded bg-rose-500/25 text-rose-200 border border-rose-400/30">
               ✨ 肌状態診断
             </span>
-            <span class="text-[11px] text-white/50">画像解析</span>
+            <span id="skin-voice-badge" class="hidden text-[10px] px-2 py-0.5 rounded-full bg-sky-400/20 text-sky-300 border border-sky-400/30">
+              🎙️ 音声選択待機中
+            </span>
           </div>
-          <h3 class="text-base font-semibold text-white mt-2">肌診断のために写真をアップロードしますか？</h3>
-          <p class="text-xs text-white/70 mt-1 mb-5 leading-relaxed">
+          <h3 class="text-base font-semibold text-white mt-1.5">肌診断のために写真をアップロードしますか？</h3>
+          <p class="text-xs text-white/70 mt-1 mb-3.5 leading-relaxed">
             アルバムから写真を選択するか、3秒カウントダウンで今すぐ撮影できます。
           </p>
+
+          <!-- 音声入力モード時のライブリスニング＆音声コマンドガイド -->
+          <div id="skin-voice-box" class="hidden mb-3.5 p-3 rounded-2xl bg-rose-500/10 border border-rose-400/30 flex flex-col items-center text-center">
+            <div class="flex items-center gap-1 h-5 mb-1">
+              <div class="wave-bar !bg-rose-400"></div><div class="wave-bar !bg-rose-400"></div><div class="wave-bar !bg-rose-400"></div><div class="wave-bar !bg-rose-400"></div><div class="wave-bar !bg-rose-400"></div>
+            </div>
+            <p class="text-[11px] text-rose-200">声でボタンを選択できます（下のボタンが自動選択されます）</p>
+            <div class="flex gap-2 mt-2">
+              <button onclick="simulateVoiceCommand('はい、アップロードする')" class="text-[10px] px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white">🗣️「アップロード」</button>
+              <button onclick="simulateVoiceCommand('今すぐ撮影する')" class="text-[10px] px-2.5 py-1 rounded-full bg-rose-500/30 hover:bg-rose-500/45 text-rose-100 border border-rose-400/40">🗣️「今すぐ撮影する」</button>
+            </div>
+          </div>
+
           <div class="flex flex-col gap-2.5">
-            <label class="w-full py-3 px-4 rounded-2xl bg-white text-neutral-950 font-semibold text-sm text-center cursor-pointer hover:bg-neutral-200 transition flex items-center justify-center gap-2">
+            <label id="btn-skin-upload" class="w-full py-3 px-4 rounded-2xl bg-white text-neutral-950 font-semibold text-sm text-center cursor-pointer hover:bg-neutral-200 transition-all flex items-center justify-center gap-2">
               <span>📁</span> はい、アップロードする
               <input type="file" id="photo-upload-input" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)" />
             </label>
-            <button onclick="startPhotoCountdown()" class="w-full py-3 px-4 rounded-2xl bg-rose-500/90 hover:bg-rose-500 text-white font-semibold text-sm transition flex items-center justify-center gap-2">
+            <button id="btn-skin-camera" onclick="startPhotoCountdown()" class="w-full py-3 px-4 rounded-2xl bg-rose-500/90 hover:bg-rose-500 text-white font-semibold text-sm transition-all flex items-center justify-center gap-2">
               <span>📸</span> 今すぐ写真を撮影する
             </button>
           </div>
@@ -208,9 +297,8 @@
       </div>
 
       <!-- 5. 診断完了：メイン画面に直接オーバーレイ表示される総合判定＆おすすめ商品グリッド (z-[25]) -->
-      <div id="card-result-overlay" class="hidden absolute inset-0 z-[25] bg-black/70 backdrop-blur-md pt-16 pb-4 px-5 flex flex-col justify-between overflow-y-auto">
+      <div id="card-result-overlay" class="hidden absolute inset-0 z-[25] bg-black/75 backdrop-blur-md pt-24 pb-4 px-5 flex flex-col justify-between overflow-y-auto">
         
-        <!-- 総合判定結果カード -->
         <div class="glass-float rounded-3xl p-4 mb-3">
           <div class="flex items-center justify-between mb-2">
             <div>
@@ -223,7 +311,6 @@
             </div>
           </div>
 
-          <!-- 記録データサマリー -->
           <div class="grid grid-cols-3 gap-2 mt-3 text-center">
             <div class="bg-white/5 rounded-xl py-1.5 px-1.5">
               <span class="text-[10px] text-white/55 block">睡眠時間</span>
@@ -240,17 +327,15 @@
           </div>
         </div>
 
-        <!-- 動画終了後の関連動画グリッド風：おすすめスキンケア商品 -->
         <div class="flex-1 flex flex-col justify-center">
           <div class="flex items-center justify-between mb-2 px-1">
             <span class="text-xs font-semibold text-white/95">おすすめのスキンケア製品</span>
-            <span class="text-[10px] text-white/50">パーソナル提案</span>
+            <span class="text-[10px] text-white/50">「リプレイ」または「もう一度」で再記録</span>
           </div>
           
           <div class="grid grid-cols-2 gap-2.5">
-            <!-- 商品カード 1 -->
             <div class="glass-float rounded-2xl p-3 flex flex-col justify-between hover:border-sky-400/50 transition cursor-pointer">
-              <div class="w-full h-16 rounded-xl bg-gradient-to-br from-sky-500/25 to-indigo-500/10 flex items-center justify-center text-2xl mb-2 relative">
+              <div class="w-full h-14 rounded-xl bg-gradient-to-br from-sky-500/25 to-indigo-500/10 flex items-center justify-center text-2xl mb-2 relative">
                 💧
                 <span class="absolute top-1.5 right-1.5 text-[9px] px-1.5 py-0.5 rounded bg-black/60 text-sky-300">適合 98%</span>
               </div>
@@ -260,9 +345,8 @@
               </div>
             </div>
 
-            <!-- 商品カード 2 -->
             <div class="glass-float rounded-2xl p-3 flex flex-col justify-between hover:border-emerald-400/50 transition cursor-pointer">
-              <div class="w-full h-16 rounded-xl bg-gradient-to-br from-emerald-500/25 to-teal-500/10 flex items-center justify-center text-2xl mb-2 relative">
+              <div class="w-full h-14 rounded-xl bg-gradient-to-br from-emerald-500/25 to-teal-500/10 flex items-center justify-center text-2xl mb-2 relative">
                 🌿
                 <span class="absolute top-1.5 right-1.5 text-[9px] px-1.5 py-0.5 rounded bg-black/60 text-emerald-300">適合 94%</span>
               </div>
@@ -272,9 +356,8 @@
               </div>
             </div>
 
-            <!-- 商品カード 3 -->
             <div class="glass-float rounded-2xl p-3 flex flex-col justify-between hover:border-amber-400/50 transition cursor-pointer">
-              <div class="w-full h-16 rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-500/10 flex items-center justify-center text-2xl mb-2 relative">
+              <div class="w-full h-14 rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-500/10 flex items-center justify-center text-2xl mb-2 relative">
                 🫧
                 <span class="absolute top-1.5 right-1.5 text-[9px] px-1.5 py-0.5 rounded bg-black/60 text-amber-300">デイリー洗顔</span>
               </div>
@@ -284,9 +367,8 @@
               </div>
             </div>
 
-            <!-- 商品カード 4 -->
             <div class="glass-float rounded-2xl p-3 flex flex-col justify-between hover:border-rose-400/50 transition cursor-pointer">
-              <div class="w-full h-16 rounded-xl bg-gradient-to-br from-rose-500/25 to-purple-500/10 flex items-center justify-center text-2xl mb-2 relative">
+              <div class="w-full h-14 rounded-xl bg-gradient-to-br from-rose-500/25 to-purple-500/10 flex items-center justify-center text-2xl mb-2 relative">
                 🌙
                 <span class="absolute top-1.5 right-1.5 text-[9px] px-1.5 py-0.5 rounded bg-black/60 text-rose-300">ナイトケア</span>
               </div>
@@ -301,47 +383,38 @@
       </div>
     </div>
 
-    <!-- ボトムプレイヤーコントロール（タイムスタンプ付きシークバー ＋ 記録開始ボタン ＋ 倍速切替） -->
+    <!-- ボトムプレイヤーコントロール -->
     <div class="relative z-30 bg-black/95 px-6 pt-3.5 pb-6 border-t border-white/10">
       
       <!-- シークバー＆タイムスタンプメニュー -->
       <div class="mb-4">
-        <!-- タイムスタンプアイコン行（クリックで各機能へ直接ジャンプ） -->
         <div class="relative w-full h-7 mb-1">
-          <!-- ジャンプ 1: 睡眠 (15%) -->
           <button onclick="jumpToStage('sleep')" class="group absolute left-[15%] -translate-x-1/2 flex flex-col items-center cursor-pointer focus:outline-none" title="睡眠記録へ移動">
             <span class="text-xs group-hover:scale-125 transition-transform">🌙</span>
             <span class="text-[9px] text-white/55 group-hover:text-sky-300">睡眠</span>
           </button>
 
-          <!-- ジャンプ 2: ストレス (50%) -->
           <button onclick="jumpToStage('stress')" class="group absolute left-[50%] -translate-x-1/2 flex flex-col items-center cursor-pointer focus:outline-none" title="ストレス記録へ移動">
             <span class="text-xs group-hover:scale-125 transition-transform">⚡</span>
             <span class="text-[9px] text-white/55 group-hover:text-amber-300">ストレス</span>
           </button>
 
-          <!-- ジャンプ 3: 肌診断 (85%) -->
           <button onclick="jumpToStage('skin')" class="group absolute left-[85%] -translate-x-1/2 flex flex-col items-center cursor-pointer focus:outline-none" title="肌診断へ移動">
             <span class="text-xs group-hover:scale-125 transition-transform">✨</span>
             <span class="text-[9px] text-white/55 group-hover:text-rose-300">肌診断</span>
           </button>
         </div>
 
-        <!-- プレイヤープログレスバー -->
         <div class="relative w-full h-2 bg-white/15 rounded-full flex items-center mt-1">
-          <!-- 再生済みバー -->
           <div id="progress-fill" class="h-full bg-gradient-to-r from-sky-400 via-amber-400 to-rose-400 rounded-full transition-all duration-100" style="width: 0%;"></div>
           
-          <!-- タイムスタンプマーカー -->
-          <button onclick="jumpToStage('sleep')" class="absolute left-[15%] -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-neutral-950 border-2 border-sky-400 hover:scale-125 transition z-10 cursor-pointer" title="睡眠記録へ"></button>
-          <button onclick="jumpToStage('stress')" class="absolute left-[50%] -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-neutral-950 border-2 border-amber-400 hover:scale-125 transition z-10 cursor-pointer" title="ストレス記録へ"></button>
-          <button onclick="jumpToStage('skin')" class="absolute left-[85%] -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-neutral-950 border-2 border-rose-400 hover:scale-125 transition z-10 cursor-pointer" title="肌診断へ"></button>
+          <button onclick="jumpToStage('sleep')" class="absolute left-[15%] -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-neutral-950 border-2 border-sky-400 hover:scale-125 transition z-10 cursor-pointer"></button>
+          <button onclick="jumpToStage('stress')" class="absolute left-[50%] -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-neutral-950 border-2 border-amber-400 hover:scale-125 transition z-10 cursor-pointer"></button>
+          <button onclick="jumpToStage('skin')" class="absolute left-[85%] -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-neutral-950 border-2 border-rose-400 hover:scale-125 transition z-10 cursor-pointer"></button>
 
-          <!-- 再生ヘッド -->
           <div id="progress-thumb" class="pointer-events-none absolute w-3.5 h-3.5 bg-white rounded-full shadow-[0_0_10px_#fff] -translate-x-1/2 transition-all duration-100 z-20" style="left: 0%;"></div>
         </div>
 
-        <!-- タイムコード＆ステータスプレビュー -->
         <div class="flex justify-between items-center mt-2 text-[11px] font-mono text-white/45">
           <span id="time-current">00:00</span>
           <span id="chapter-preview" class="text-white/85 font-sans truncate max-w-[220px] text-center">記録開始、またはアイコンで移動</span>
@@ -349,9 +422,8 @@
         </div>
       </div>
 
-      <!-- メイン操作ボタン（左：リセット＆カメラ / 中央：記録開始 / 右：倍速切替） -->
+      <!-- メイン操作ボタン -->
       <div class="flex items-center justify-between gap-2">
-        <!-- 左側アクション群 -->
         <div class="flex items-center gap-1.5">
           <button onclick="resetApp()" class="w-9 h-9 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center text-white/65 hover:text-white transition text-sm" title="リセット">
             ↺
@@ -361,15 +433,13 @@
           </button>
         </div>
 
-        <!-- 中央：記録開始ボタン -->
         <button id="main-play-btn" onclick="toggleRecord()" class="flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-white text-neutral-950 font-bold text-sm shadow-[0_0_24px_rgba(255,255,255,0.22)] hover:scale-105 active:scale-95 transition-all">
           <span id="play-icon" class="text-xs">▶</span>
           <span id="play-label">記録開始</span>
         </button>
 
-        <!-- 右側：倍速切替コントロール（2.0x / 1.0x / 0.5x） -->
+        <!-- 右側：倍速切替コントロール -->
         <div class="relative">
-          <!-- 倍速選択ポップアップメニュー -->
           <div id="speed-menu" class="hidden absolute bottom-12 right-0 glass-float rounded-2xl p-1.5 flex flex-col gap-1 min-w-[78px] z-40">
             <button onclick="setPlaybackSpeed(2)" id="speed-opt-2" class="speed-opt text-xs font-mono py-1.5 px-3 rounded-xl text-white/75 hover:bg-white/10 text-right transition">
               2.0x
@@ -382,8 +452,7 @@
             </button>
           </div>
 
-          <!-- 倍速表示トリガーボタン（クリックでメニュー開閉） -->
-          <button onclick="toggleSpeedMenu()" id="speed-trigger-btn" class="h-9 px-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-xs font-mono font-semibold text-white transition" title="再生速度を変更 (2.0x / 1.0x / 0.5x)">
+          <button onclick="toggleSpeedMenu()" id="speed-trigger-btn" class="h-9 px-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-xs font-mono font-semibold text-white transition" title="再生速度を変更">
             1.0x
           </button>
         </div>
@@ -394,11 +463,13 @@
 
   <script>
     let isPlaying = false;
-    let progress = 0; // 0 ~ 100
-    let playbackSpeed = 1; // 0.5, 1, 2
+    let progress = 0;
+    let playbackSpeed = 1;
+    let inputMode = 'manual'; // 'manual' | 'voice'
     let timerInterval = null;
     let stageTriggered = { sleep: false, stress: false, skin: false };
     let cameraStream = null;
+    let recognition = null;
 
     const userData = {
       sleep: null,
@@ -418,13 +489,243 @@
     const statusBadge = document.getElementById('status-badge');
     const scanLine = document.getElementById('scan-line');
 
-    // 倍速メニューの開閉
-    function toggleSpeedMenu() {
-      const menu = document.getElementById('speed-menu');
-      menu.classList.toggle('hidden');
+    function initSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) return null;
+
+      const rec = new SpeechRecognition();
+      rec.lang = 'ja-JP';
+      rec.continuous = true;
+      rec.interimResults = true;
+
+      rec.onresult = (event) => {
+        const last = event.results[event.results.length - 1];
+        const text = last[0].transcript.trim();
+        document.getElementById('voice-transcript').textContent = `「${text}」`;
+        if (last.isFinal) {
+          handleVoiceCommand(text);
+        }
+      };
+
+      rec.onend = () => {
+        if (inputMode === 'voice') {
+          try { rec.start(); } catch (e) {}
+        }
+      };
+
+      return rec;
     }
 
-    // 画面の別の場所をクリックしたら倍速メニューを閉じる
+    function setInputMode(mode) {
+      inputMode = mode;
+      const btnManual = document.getElementById('top-mode-manual');
+      const btnVoice = document.getElementById('top-mode-voice');
+      const voiceToast = document.getElementById('voice-toast');
+
+      if (mode === 'voice') {
+        btnVoice.classList.add('bg-sky-400', 'text-neutral-950', 'font-semibold', 'shadow');
+        btnVoice.classList.remove('text-white/80');
+        btnManual.classList.remove('bg-white', 'text-neutral-950', 'font-semibold', 'shadow');
+        btnManual.classList.add('text-white/80');
+
+        voiceToast.classList.remove('hidden');
+
+        if (!recognition) recognition = initSpeechRecognition();
+        if (recognition) {
+          try { recognition.start(); } catch (e) {}
+        }
+      } else {
+        btnManual.classList.add('bg-white', 'text-neutral-950', 'font-semibold', 'shadow');
+        btnManual.classList.remove('text-white/80');
+        btnVoice.classList.remove('bg-sky-400', 'text-neutral-950', 'font-semibold', 'shadow');
+        btnVoice.classList.add('text-white/80');
+
+        voiceToast.classList.add('hidden');
+
+        if (recognition) {
+          try { recognition.stop(); } catch (e) {}
+        }
+      }
+
+      syncCardInputModeUI();
+    }
+
+    function syncCardInputModeUI() {
+      const isVoice = inputMode === 'voice';
+      document.getElementById('sleep-voice-box').classList.toggle('hidden', !isVoice);
+      document.getElementById('sleep-manual-box').classList.toggle('hidden', isVoice);
+
+      document.getElementById('stress-voice-box').classList.toggle('hidden', !isVoice);
+      document.getElementById('stress-manual-box').classList.toggle('hidden', isVoice);
+
+      document.getElementById('skin-voice-box').classList.toggle('hidden', !isVoice);
+      document.getElementById('skin-voice-badge').classList.toggle('hidden', !isVoice);
+    }
+
+    // 現在の画面状態に応じたテスト発話実行
+    function triggerContextTestVoice() {
+      if (!document.getElementById('card-result-overlay').classList.contains('hidden')) {
+        simulateVoiceCommand('リプレイ');
+      } else if (!document.getElementById('card-sleep').classList.contains('hidden')) {
+        simulateVoiceCommand('7時間半');
+      } else if (!document.getElementById('card-stress').classList.contains('hidden')) {
+        simulateVoiceCommand('普通');
+      } else if (!document.getElementById('card-skin-popup').classList.contains('hidden')) {
+        simulateVoiceCommand('今すぐ写真を撮影する');
+      } else if (!isPlaying) {
+        simulateVoiceCommand('記録開始');
+      }
+    }
+
+    function simulateVoiceCommand(phrase) {
+      document.getElementById('voice-transcript').textContent = `「${phrase}」`;
+      handleVoiceCommand(phrase);
+    }
+
+    // 音声コマンド解析＆実行
+    function handleVoiceCommand(text) {
+      // 0. リプレイ / もう一度（再度最初から記録を実行）
+      if (
+        text.includes('リプレイ') ||
+        text.includes('リプレー') ||
+        text.includes('もう一度') ||
+        text.includes('もう一回') ||
+        text.includes('やり直') ||
+        text.includes('再記録')
+      ) {
+        const mainBtn = document.getElementById('main-play-btn');
+        mainBtn.classList.add('voice-selected-ring');
+        chapterPreview.textContent = '🎙️ 音声認識：最初から記録を再開します...';
+        setTimeout(() => {
+          mainBtn.classList.remove('voice-selected-ring');
+          replayRecording();
+        }, 450);
+        return;
+      }
+
+      // 1. 全体制御
+      if (text.includes('開始') || text.includes('スタート') || text.includes('再生')) {
+        if (!isPlaying) toggleRecord();
+        return;
+      }
+      if (text.includes('停止') || text.includes('ストップ') || text.includes('ポーズ')) {
+        if (isPlaying) toggleRecord();
+        return;
+      }
+      if (text.includes('リセット') || text.includes('最初から')) {
+        resetApp();
+        return;
+      }
+
+      // 2. 睡眠記録中の音声入力
+      if (!document.getElementById('card-sleep').classList.contains('hidden')) {
+        const numMatch = text.match(/(\d+(\.\d+)?)/);
+        if (numMatch) {
+          let hours = parseFloat(numMatch[1]);
+          if (text.includes('半')) hours += 0.5;
+          hours = Math.min(12, Math.max(3, hours));
+          userData.sleepTemp = hours;
+          document.getElementById('sleep-val-display').textContent = hours;
+          document.getElementById('sleep-slider').value = hours;
+          confirmSleep();
+          return;
+        }
+      }
+
+      // 3. ストレス記録中の音声入力
+      if (!document.getElementById('card-stress').classList.contains('hidden')) {
+        if (text.includes('穏やか') || text.includes('低い') || text.includes('リラックス')) {
+          userData.stressTemp = 1; confirmStress(); return;
+        }
+        if (text.includes('安定')) {
+          userData.stressTemp = 2; confirmStress(); return;
+        }
+        if (text.includes('普通') || text.includes('ふつう')) {
+          userData.stressTemp = 3; confirmStress(); return;
+        }
+        if (text.includes('やや高い') || text.includes('少し')) {
+          userData.stressTemp = 4; confirmStress(); return;
+        }
+        if (text.includes('高い') || text.includes('高負荷') || text.includes('限界')) {
+          userData.stressTemp = 5; confirmStress(); return;
+        }
+      }
+
+      // 4. 最後の肌診断ポップアップ：音声内容に応じてボタンを自動選択・発光させて実行
+      if (!document.getElementById('card-skin-popup').classList.contains('hidden')) {
+        if (text.includes('撮影') || text.includes('撮る') || text.includes('カメラ') || text.includes('今すぐ')) {
+          const camBtn = document.getElementById('btn-skin-camera');
+          camBtn.classList.add('voice-selected-ring');
+          chapterPreview.textContent = '🎙️ 音声選択：「今すぐ写真を撮影する」';
+          setTimeout(() => {
+            camBtn.classList.remove('voice-selected-ring');
+            startPhotoCountdown();
+          }, 550);
+          return;
+        }
+
+        if (text.includes('アップロード') || text.includes('はい') || text.includes('アルバム') || text.includes('選ぶ') || text.includes('写真')) {
+          const uploadBtn = document.getElementById('btn-skin-upload');
+          uploadBtn.classList.add('voice-selected-ring');
+          chapterPreview.textContent = '🎙️ 音声選択：「はい、アップロードする」';
+          setTimeout(() => {
+            uploadBtn.classList.remove('voice-selected-ring');
+            try {
+              document.getElementById('photo-upload-input').click();
+            } catch (e) {}
+            setTimeout(() => {
+              if (!document.getElementById('card-skin-popup').classList.contains('hidden')) {
+                loadSampleUploadedPhoto();
+              }
+            }, 600);
+          }, 550);
+          return;
+        }
+      }
+
+      // 5. タイムスタンプジャンプ
+      if (text.includes('睡眠')) { jumpToStage('sleep'); return; }
+      if (text.includes('ストレス')) { jumpToStage('stress'); return; }
+      if (text.includes('肌')) { jumpToStage('skin'); return; }
+    }
+
+    // 「リプレイ」「もう一度」専用の即時再記録実行関数
+    function replayRecording() {
+      resetApp();
+      isPlaying = true;
+      updatePlayBtn();
+      scanLine.classList.remove('hidden');
+      statusBadge.textContent = '再記録進行中';
+      chapterPreview.textContent = '↺ 最初から記録を再開しました';
+      startTimeline();
+    }
+
+    function loadSampleUploadedPhoto() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 600;
+      canvas.height = 800;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createRadialGradient(300, 360, 40, 300, 400, 430);
+      grad.addColorStop(0, '#ebd0c0');
+      grad.addColorStop(0.55, '#b6907c');
+      grad.addColorStop(1, '#1e293b');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 600, 800);
+      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      ctx.font = '18px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('VOICE UPLOADED SKIN PHOTO', 300, 720);
+
+      const img = document.getElementById('captured-photo');
+      img.src = canvas.toDataURL('image/png');
+      img.classList.remove('hidden');
+      runSkinDiagnosis();
+    }
+
+    function toggleSpeedMenu() {
+      document.getElementById('speed-menu').classList.toggle('hidden');
+    }
+
     document.addEventListener('click', (e) => {
       const menu = document.getElementById('speed-menu');
       const btn = document.getElementById('speed-trigger-btn');
@@ -433,20 +734,17 @@
       }
     });
 
-    // 倍速の設定 (2.0x / 1.0x / 0.5x)
     function setPlaybackSpeed(speed) {
       playbackSpeed = speed;
       const label = speed === 2 ? '2.0x' : speed === 0.5 ? '0.5x' : '1.0x';
-      
       const triggerBtn = document.getElementById('speed-trigger-btn');
       triggerBtn.textContent = label;
       
-      // 1.0x以外のときはアクセントカラーで強調表示
       if (speed !== 1) {
         triggerBtn.classList.add('border-sky-400/60', 'text-sky-300', 'bg-sky-400/15');
         triggerBtn.classList.remove('border-white/15', 'text-white', 'bg-white/10');
         const topPill = document.getElementById('top-speed-pill');
-        topPill.textContent = `${label} 再生`;
+        topPill.textContent = `${label}`;
         topPill.classList.remove('hidden');
       } else {
         triggerBtn.classList.remove('border-sky-400/60', 'text-sky-300', 'bg-sky-400/15');
@@ -454,7 +752,6 @@
         document.getElementById('top-speed-pill').classList.add('hidden');
       }
 
-      // メニュー内の選択状態を更新
       document.querySelectorAll('.speed-opt').forEach(el => {
         el.classList.remove('bg-white/20', 'text-white', 'font-semibold');
         el.classList.add('text-white/75');
@@ -464,7 +761,6 @@
         activeOpt.classList.add('bg-white/20', 'text-white', 'font-semibold');
         activeOpt.classList.remove('text-white/75');
       }
-
       document.getElementById('speed-menu').classList.add('hidden');
     }
 
@@ -475,7 +771,8 @@
 
     function toggleRecord() {
       if (progress >= 100) {
-        resetApp();
+        replayRecording();
+        return;
       }
       isPlaying = !isPlaying;
       updatePlayBtn();
@@ -501,7 +798,6 @@
       }
     }
 
-    // メインタイムライン（100msごとに 0.5% * playbackSpeed 進行）
     function startTimeline() {
       clearInterval(timerInterval);
       timerInterval = setInterval(() => {
@@ -511,46 +807,38 @@
         if (progress > 100) progress = 100;
         renderProgress();
 
-        // 15% -> 睡眠記録を自動起動
         if (progress >= 15 && progress < 45 && !stageTriggered.sleep) {
           stageTriggered.sleep = true;
           openSleepStage();
         }
 
-        // 睡眠スキップ残り秒数をタイムライン進捗と連動してリアルタイム更新
         if (!document.getElementById('card-sleep').classList.contains('hidden')) {
           const remainingProgress = Math.max(0, 45 - progress);
-          // 30% = 6秒 (1秒 = 5%)
           const remainSec = Math.ceil(remainingProgress / 5);
           document.getElementById('sleep-timer').textContent = `残り 0${remainSec}秒でスキップ`;
         }
 
-        // 45% -> 未回答なら自動スキップ
         if (progress >= 45 && !document.getElementById('card-sleep').classList.contains('hidden')) {
           hideAllOverlays();
           chapterPreview.textContent = '睡眠記録をスキップ・次へ進みます';
         }
 
-        // 50% -> ストレス記録を自動起動
         if (progress >= 50 && progress < 80 && !stageTriggered.stress) {
           stageTriggered.stress = true;
           openStressStage();
         }
 
-        // ストレススキップ残り秒数をタイムライン進捗と連動してリアルタイム更新
         if (!document.getElementById('card-stress').classList.contains('hidden')) {
           const remainingProgress = Math.max(0, 80 - progress);
           const remainSec = Math.ceil(remainingProgress / 5);
           document.getElementById('stress-timer').textContent = `残り 0${remainSec}秒でスキップ`;
         }
 
-        // 80% -> 未回答なら自動スキップ
         if (progress >= 80 && !document.getElementById('card-stress').classList.contains('hidden')) {
           hideAllOverlays();
           chapterPreview.textContent = 'ストレス記録をスキップ・肌診断へ';
         }
 
-        // 85% -> 肌診断ポップアップを表示（選択待ちのためタイムライン一時停止）
         if (progress >= 85 && !stageTriggered.skin) {
           stageTriggered.skin = true;
           openSkinPopup();
@@ -607,12 +895,12 @@
       });
     }
 
-    // 1. 睡眠記録
     function openSleepStage() {
       hideAllOverlays();
+      syncCardInputModeUI();
       document.getElementById('card-sleep').classList.remove('hidden');
       document.getElementById('sleep-timer').textContent = `残り 06秒でスキップ`;
-      chapterPreview.textContent = '🌙 記録中：睡眠時間';
+      chapterPreview.textContent = inputMode === 'voice' ? '🎙️ 音声入力中：睡眠時間' : '🌙 記録中：睡眠時間';
     }
 
     function confirmSleep() {
@@ -621,12 +909,12 @@
       chapterPreview.textContent = `✓ 睡眠 ${userData.sleep}時間 を記録しました`;
     }
 
-    // 2. ストレス記録
     function openStressStage() {
       hideAllOverlays();
+      syncCardInputModeUI();
       document.getElementById('card-stress').classList.remove('hidden');
       document.getElementById('stress-timer').textContent = `残り 06秒でスキップ`;
-      chapterPreview.textContent = '⚡ 記録中：ストレス指数';
+      chapterPreview.textContent = inputMode === 'voice' ? '🎙️ 音声入力中：ストレス指数' : '⚡ 記録中：ストレス指数';
     }
 
     function selectStress(level, btn) {
@@ -645,12 +933,12 @@
       chapterPreview.textContent = `✓ ストレス [${stressMap[userData.stress]}] を記録しました`;
     }
 
-    // 3. 肌診断ポップアップ
     function openSkinPopup() {
       clearInterval(timerInterval);
       hideAllOverlays();
+      syncCardInputModeUI();
       document.getElementById('card-skin-popup').classList.remove('hidden');
-      chapterPreview.textContent = '✨ 写真のアップロードまたは撮影を選択';
+      chapterPreview.textContent = inputMode === 'voice' ? '🎙️「撮影する」または「アップロード」' : '✨ 写真のアップロードまたは撮影を選択';
       statusBadge.textContent = '撮影・選択待ち';
     }
 
@@ -756,7 +1044,7 @@
 
         document.getElementById('card-result-overlay').classList.remove('hidden');
         statusBadge.textContent = '診断完了';
-        chapterPreview.textContent = '✅ 肌診断完了・おすすめ製品を表示中';
+        chapterPreview.textContent = inputMode === 'voice' ? '🎙️「リプレイ」「もう一度」で再記録' : '✅ 肌診断完了・おすすめ製品を表示中';
         playIcon.textContent = '↺';
         playLabel.textContent = 'もう一度記録';
       }, Math.max(800, 1800 / playbackSpeed));
