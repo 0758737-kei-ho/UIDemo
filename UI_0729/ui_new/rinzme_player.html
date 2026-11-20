@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>RINZME - 肌状態・コンディション診断プレイヤー</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background-color: #090b0e;
+      color: #f8fafc;
+      user-select: none;
+    }
+    /* カメラスキャンライン演出 */
+    @keyframes scanline {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100%); }
+    }
+    .scan-overlay {
+      background: linear-gradient(to bottom, transparent, rgba(56, 189, 248, 0.14), transparent);
+      animation: scanline 2.8s linear infinite;
+    }
+    /* シャッター瞬き演出 */
+    @keyframes shutterBlink {
+      0% { opacity: 0; }
+      30% { opacity: 0.65; }
+      100% { opacity: 0; }
+    }
+    .shutter-active {
+      animation: shutterBlink 0.35s ease-out forwards;
+    }
+    /* 半透明グラスモーフィズム */
+    .glass-float {
+      background: rgba(15, 20, 28, 0.64);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+    /* カスタムスライダー */
+    input[type="range"] {
+      -webkit-appearance: none;
+      background: rgba(255, 255, 255, 0.22);
+      height: 6px;
+      border-radius: 999px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #38bdf8;
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.85);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 sm:p-4">
+
+  <!-- メインプレイヤーコンテナ -->
+  <div class="relative w-full max-w-[420px] h-[820px] max-h-[95vh] bg-neutral-950 rounded-[36px] border border-white/10 shadow-2xl overflow-hidden flex flex-col justify-between">
+    
+    <!-- トップステータスバー -->
+    <div class="absolute top-0 inset-x-0 z-30 flex items-center justify-between px-6 pt-5 pb-3 bg-gradient-to-b from-black/70 to-transparent pointer-events-none">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+        <span class="tracking-[0.22em] font-semibold text-sm text-white/90">RINZME</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="top-speed-pill" class="hidden text-[10px] px-2 py-0.5 rounded-full bg-sky-400/20 text-sky-300 border border-sky-400/30 font-mono">
+          1.0x
+        </span>
+        <div id="status-badge" class="text-[11px] px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-md text-white/85 border border-white/10">
+          カメラプレビュー中
+        </div>
+      </div>
+    </div>
+
+    <!-- メイン画面（カメラ映像 / アップロード写真 / 診断結果オーバーレイ） -->
+    <div class="relative flex-1 w-full h-full bg-neutral-900 overflow-hidden flex items-center justify-center">
+      
+      <!-- 1. リアルタイムカメラ画面（模擬プレビュー＆実カメラ対応） -->
+      <div id="camera-feed" class="absolute inset-0 flex flex-col items-center justify-center z-0">
+        <video id="real-camera" autoplay playsinline muted class="hidden absolute inset-0 w-full h-full object-cover scale-x-[-1]"></video>
+        <div id="mock-camera-bg" class="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,_#1e293b_0%,_#090d16_100%)]"></div>
+        
+        <!-- 顔位置ガイドフレーム -->
+        <div class="relative w-52 h-68 border border-dashed border-white/25 rounded-[105px] flex items-center justify-center pointer-events-none">
+          <div class="w-44 h-60 border border-white/10 rounded-[90px]"></div>
+          <span class="absolute -bottom-6 text-[10px] tracking-[0.2em] text-white/35">FACE FRAME</span>
+        </div>
+
+        <!-- 記録中のスキャンエフェクト -->
+        <div id="scan-line" class="hidden scan-overlay absolute inset-0 pointer-events-none"></div>
+      </div>
+
+      <!-- 2. アップロードまたは撮影された写真 (z-10) -->
+      <img id="captured-photo" src="" alt="Skin Capture" class="hidden absolute inset-0 w-full h-full object-cover z-10" />
+
+      <!-- 3. シャッターエフェクト層 (z-40) -->
+      <div id="shutter-layer" class="pointer-events-none absolute inset-0 bg-black opacity-0 z-40"></div>
+
+      <!-- 4. 半透明フローティングUIエリア（メイン画面中央） (z-20) -->
+      <div class="relative z-20 w-full px-5 flex flex-col items-center justify-center">
+        
+        <!-- ステップ 1：睡眠時間記録 -->
+        <div id="card-sleep" class="hidden w-full glass-float rounded-3xl p-5 transition-all duration-300">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-medium text-sky-300 flex items-center gap-1.5">
+              <span>🌙</span> 睡眠時間の記録
+            </span>
+            <span class="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-white/75 font-mono" id="sleep-timer">残り 06秒でスキップ</span>
+          </div>
+          <p class="text-sm text-white/95 font-medium mb-3">昨晩の睡眠時間はどのくらいですか？</p>
+          <div class="flex items-baseline justify-center gap-1 my-2">
+            <span id="sleep-val-display" class="text-4xl font-bold text-white">7.5</span>
+            <span class="text-xs text-white/60">時間</span>
+          </div>
+          <input type="range" id="sleep-slider" min="3" max="12" step="0.5" value="7.5" class="w-full my-3" />
+          <div class="flex justify-between text-[10px] text-white/45 mb-4">
+            <span>3時間</span>
+            <span>7.5時間</span>
+            <span>12時間</span>
+          </div>
+          <button onclick="confirmSleep()" class="w-full py-2.5 rounded-xl bg-sky-400/90 hover:bg-sky-400 text-neutral-950 font-semibold text-sm transition">
+            記録する
+          </button>
+        </div>
+
+        <!-- ステップ 2：ストレス指数記録 -->
+        <div id="card-stress" class="hidden w-full glass-float rounded-3xl p-5 transition-all duration-300">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-medium text-amber-300 flex items-center gap-1.5">
+              <span>⚡</span> ストレス変化の記録
+            </span>
+            <span class="text-[11px] px-2 py-0.5 rounded-full bg-white/10 text-white/75 font-mono" id="stress-timer">残り 06秒でスキップ</span>
+          </div>
+          <p class="text-sm text-white/95 font-medium mb-4">現在のストレス状態を選択してください：</p>
+          <div class="grid grid-cols-5 gap-1.5 mb-4" id="stress-options">
+            <button onclick="selectStress(1, this)" class="stress-btn flex flex-col items-center py-2.5 px-1 rounded-2xl bg-white/5 border border-white/10 hover:border-amber-300/60 transition">
+              <span class="text-xl mb-1">😌</span>
+              <span class="text-[10px] text-white/80">穏やか</span>
+            </button>
+            <button onclick="selectStress(2, this)" class="stress-btn flex flex-col items-center py-2.5 px-1 rounded-2xl bg-white/5 border border-white/10 hover:border-amber-300/60 transition">
+              <span class="text-xl mb-1">🙂</span>
+              <span class="text-[10px] text-white/80">安定</span>
+            </button>
+            <button onclick="selectStress(3, this)" class="stress-btn flex flex-col items-center py-2.5 px-1 rounded-2xl bg-amber-400/25 border border-amber-300 transition">
+              <span class="text-xl mb-1">😐</span>
+              <span class="text-[10px] text-white/95">普通</span>
+            </button>
+            <button onclick="selectStress(4, this)" class="stress-btn flex flex-col items-center py-2.5 px-1 rounded-2xl bg-white/5 border border-white/10 hover:border-amber-300/60 transition">
+              <span class="text-xl mb-1">😣</span>
+              <span class="text-[10px] text-white/80">やや高い</span>
+            </button>
+            <button onclick="selectStress(5, this)" class="stress-btn flex flex-col items-center py-2.5 px-1 rounded-2xl bg-white/5 border border-white/10 hover:border-amber-300/60 transition">
+              <span class="text-xl mb-1">🤯</span>
+              <span class="text-[10px] text-white/80">高負荷</span>
+            </button>
+          </div>
+          <button onclick="confirmStress()" class="w-full py-2.5 rounded-xl bg-amber-400/90 hover:bg-amber-400 text-neutral-950 font-semibold text-sm transition">
+            記録する
+          </button>
+        </div>
+
+        <!-- ステップ 3：肌診断ポップアップ（動画内ポップアップ風） -->
+        <div id="card-skin-popup" class="hidden w-full glass-float rounded-3xl p-5 border-rose-400/35 relative">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] tracking-wider px-2 py-0.5 rounded bg-rose-500/25 text-rose-200 border border-rose-400/30">
+              ✨ 肌状態診断
+            </span>
+            <span class="text-[11px] text-white/50">画像解析</span>
+          </div>
+          <h3 class="text-base font-semibold text-white mt-2">肌診断のために写真をアップロードしますか？</h3>
+          <p class="text-xs text-white/70 mt-1 mb-5 leading-relaxed">
+            アルバムから写真を選択するか、3秒カウントダウンで今すぐ撮影できます。
+          </p>
+          <div class="flex flex-col gap-2.5">
+            <label class="w-full py-3 px-4 rounded-2xl bg-white text-neutral-950 font-semibold text-sm text-center cursor-pointer hover:bg-neutral-200 transition flex items-center justify-center gap-2">
+              <span>📁</span> はい、アップロードする
+              <input type="file" id="photo-upload-input" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)" />
+            </label>
+            <button onclick="startPhotoCountdown()" class="w-full py-3 px-4 rounded-2xl bg-rose-500/90 hover:bg-rose-500 text-white font-semibold text-sm transition flex items-center justify-center gap-2">
+              <span>📸</span> 今すぐ写真を撮影する
+            </button>
+          </div>
+        </div>
+
+        <!-- 撮影準備メッセージ + 3秒カウントダウン -->
+        <div id="card-countdown" class="hidden flex flex-col items-center text-center">
+          <div class="px-4 py-1.5 rounded-full glass-float text-xs text-white/95 mb-4">
+            枠内に顔を合わせて、そのままお待ちください
+          </div>
+          <div id="countdown-number" class="text-7xl font-bold text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.85)]">
+            3
+          </div>
+        </div>
+
+        <!-- AI 肌診断解析中 -->
+        <div id="card-analyzing" class="hidden flex flex-col items-center glass-float px-6 py-5 rounded-3xl">
+          <div class="w-8 h-8 border-2 border-sky-400 border-t-transparent rounded-full animate-spin mb-3"></div>
+          <p class="text-sm font-medium text-white">肌状態を総合解析しています...</p>
+          <p class="text-xs text-white/60 mt-1">睡眠・ストレスデータと統合判定中</p>
+        </div>
+
+      </div>
+
+      <!-- 5. 診断完了：メイン画面に直接オーバーレイ表示される総合判定＆おすすめ商品グリッド (z-[25]) -->
+      <div id="card-result-overlay" class="hidden absolute inset-0 z-[25] bg-black/70 backdrop-blur-md pt-16 pb-4 px-5 flex flex-col justify-between overflow-y-auto">
+        
+        <!-- 総合判定結果カード -->
+        <div class="glass-float rounded-3xl p-4 mb-3">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <span class="text-[10px] tracking-wider text-sky-400 font-semibold">RINZME 総合診断レポート</span>
+              <h3 class="text-base font-bold text-white mt-0.5">インナードライ傾向・バリア機能良好</h3>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-sky-400/20 border border-sky-400/40 flex flex-col items-center justify-center shrink-0">
+              <span class="text-base font-bold text-sky-300 leading-none">85</span>
+              <span class="text-[9px] text-white/65 mt-0.5">スコア</span>
+            </div>
+          </div>
+
+          <!-- 記録データサマリー -->
+          <div class="grid grid-cols-3 gap-2 mt-3 text-center">
+            <div class="bg-white/5 rounded-xl py-1.5 px-1.5">
+              <span class="text-[10px] text-white/55 block">睡眠時間</span>
+              <span id="res-sleep" class="text-xs font-semibold text-white">7.5時間</span>
+            </div>
+            <div class="bg-white/5 rounded-xl py-1.5 px-1.5">
+              <span class="text-[10px] text-white/55 block">ストレス度</span>
+              <span id="res-stress" class="text-xs font-semibold text-amber-300">普通</span>
+            </div>
+            <div class="bg-white/5 rounded-xl py-1.5 px-1.5">
+              <span class="text-[10px] text-white/55 block">ケア方針</span>
+              <span class="text-xs font-semibold text-emerald-300">高保湿ケア</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 動画終了後の関連動画グリッド風：おすすめスキンケア商品 -->
+        <div class="flex-1 flex flex-col justify-center">
+          <div class="flex items-center justify-between mb-2 px-1">
+            <span class="text-xs font-semibold text-white/95">おすすめのスキンケア製品</span>
+            <span class="text-[10px] text-white/50">パーソナル提案</span>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-2.5">
+            <!-- 商品カード 1 -->
+            <div class="glass-float rounded-2xl p-3 flex flex-col justify-between hover:border-sky-400/50 transition cursor-pointer">
+              <div class="w-full h-16 rounded-xl bg-gradient-to-br from-sky-500/25 to-indigo-500/10 flex items-center justify-center text-2xl mb-2 relative">
+                💧
+                <span class="absolute top-1.5 right-1.5 text-[9px] px-1.5 py-0.5 rounded bg-black/60 text-sky-300">適合 98%</span>
+              </div>
+              <div>
+                <div class="text-xs font-semibold text-white line-clamp-1">B5 ヒアルロン酸リペア美容液</div>
+                <div class="text-[10px] text-white/60 mt-0.5 line-clamp-1">深層保湿・乾燥ゆらぎ対策</div>
+              </div>
+            </div>
+
+            <!-- 商品カード 2 -->
+            <div class="glass-float rounded-2xl p-3 flex flex-col justify-between hover:border-emerald-400/50 transition cursor-pointer">
+              <div class="w-full h-16 rounded-xl bg-gradient-to-br from-emerald-500/25 to-teal-500/10 flex items-center justify-center text-2xl mb-2 relative">
+                🌿
+                <span class="absolute top-1.5 right-1.5 text-[9px] px-1.5 py-0.5 rounded bg-black/60 text-emerald-300">適合 94%</span>
+              </div>
+              <div>
+                <div class="text-xs font-semibold text-white line-clamp-1">CICA バランシング乳液</div>
+                <div class="text-[10px] text-white/60 mt-0.5 line-clamp-1">水分油分バランスを整える</div>
+              </div>
+            </div>
+
+            <!-- 商品カード 3 -->
+            <div class="glass-float rounded-2xl p-3 flex flex-col justify-between hover:border-amber-400/50 transition cursor-pointer">
+              <div class="w-full h-16 rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-500/10 flex items-center justify-center text-2xl mb-2 relative">
+                🫧
+                <span class="absolute top-1.5 right-1.5 text-[9px] px-1.5 py-0.5 rounded bg-black/60 text-amber-300">デイリー洗顔</span>
+              </div>
+              <div>
+                <div class="text-xs font-semibold text-white line-clamp-1">アミノ酸マイルド泡洗顔</div>
+                <div class="text-[10px] text-white/60 mt-0.5 line-clamp-1">うるおいを守りながら洗浄</div>
+              </div>
+            </div>
+
+            <!-- 商品カード 4 -->
+            <div class="glass-float rounded-2xl p-3 flex flex-col justify-between hover:border-rose-400/50 transition cursor-pointer">
+              <div class="w-full h-16 rounded-xl bg-gradient-to-br from-rose-500/25 to-purple-500/10 flex items-center justify-center text-2xl mb-2 relative">
+                🌙
+                <span class="absolute top-1.5 right-1.5 text-[9px] px-1.5 py-0.5 rounded bg-black/60 text-rose-300">ナイトケア</span>
+              </div>
+              <div>
+                <div class="text-xs font-semibold text-white line-clamp-1">セラミドナイトクリーム</div>
+                <div class="text-[10px] text-white/60 mt-0.5 line-clamp-1">睡眠中の角質バリア集中補修</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ボトムプレイヤーコントロール（タイムスタンプ付きシークバー ＋ 記録開始ボタン ＋ 倍速切替） -->
+    <div class="relative z-30 bg-black/95 px-6 pt-3.5 pb-6 border-t border-white/10">
+      
+      <!-- シークバー＆タイムスタンプメニュー -->
+      <div class="mb-4">
+        <!-- タイムスタンプアイコン行（クリックで各機能へ直接ジャンプ） -->
+        <div class="relative w-full h-7 mb-1">
+          <!-- ジャンプ 1: 睡眠 (15%) -->
+          <button onclick="jumpToStage('sleep')" class="group absolute left-[15%] -translate-x-1/2 flex flex-col items-center cursor-pointer focus:outline-none" title="睡眠記録へ移動">
+            <span class="text-xs group-hover:scale-125 transition-transform">🌙</span>
+            <span class="text-[9px] text-white/55 group-hover:text-sky-300">睡眠</span>
+          </button>
+
+          <!-- ジャンプ 2: ストレス (50%) -->
+          <button onclick="jumpToStage('stress')" class="group absolute left-[50%] -translate-x-1/2 flex flex-col items-center cursor-pointer focus:outline-none" title="ストレス記録へ移動">
+            <span class="text-xs group-hover:scale-125 transition-transform">⚡</span>
+            <span class="text-[9px] text-white/55 group-hover:text-amber-300">ストレス</span>
+          </button>
+
+          <!-- ジャンプ 3: 肌診断 (85%) -->
+          <button onclick="jumpToStage('skin')" class="group absolute left-[85%] -translate-x-1/2 flex flex-col items-center cursor-pointer focus:outline-none" title="肌診断へ移動">
+            <span class="text-xs group-hover:scale-125 transition-transform">✨</span>
+            <span class="text-[9px] text-white/55 group-hover:text-rose-300">肌診断</span>
+          </button>
+        </div>
+
+        <!-- プレイヤープログレスバー -->
+        <div class="relative w-full h-2 bg-white/15 rounded-full flex items-center mt-1">
+          <!-- 再生済みバー -->
+          <div id="progress-fill" class="h-full bg-gradient-to-r from-sky-400 via-amber-400 to-rose-400 rounded-full transition-all duration-100" style="width: 0%;"></div>
+          
+          <!-- タイムスタンプマーカー -->
+          <button onclick="jumpToStage('sleep')" class="absolute left-[15%] -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-neutral-950 border-2 border-sky-400 hover:scale-125 transition z-10 cursor-pointer" title="睡眠記録へ"></button>
+          <button onclick="jumpToStage('stress')" class="absolute left-[50%] -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-neutral-950 border-2 border-amber-400 hover:scale-125 transition z-10 cursor-pointer" title="ストレス記録へ"></button>
+          <button onclick="jumpToStage('skin')" class="absolute left-[85%] -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-neutral-950 border-2 border-rose-400 hover:scale-125 transition z-10 cursor-pointer" title="肌診断へ"></button>
+
+          <!-- 再生ヘッド -->
+          <div id="progress-thumb" class="pointer-events-none absolute w-3.5 h-3.5 bg-white rounded-full shadow-[0_0_10px_#fff] -translate-x-1/2 transition-all duration-100 z-20" style="left: 0%;"></div>
+        </div>
+
+        <!-- タイムコード＆ステータスプレビュー -->
+        <div class="flex justify-between items-center mt-2 text-[11px] font-mono text-white/45">
+          <span id="time-current">00:00</span>
+          <span id="chapter-preview" class="text-white/85 font-sans truncate max-w-[220px] text-center">記録開始、またはアイコンで移動</span>
+          <span>00:20</span>
+        </div>
+      </div>
+
+      <!-- メイン操作ボタン（左：リセット＆カメラ / 中央：記録開始 / 右：倍速切替） -->
+      <div class="flex items-center justify-between gap-2">
+        <!-- 左側アクション群 -->
+        <div class="flex items-center gap-1.5">
+          <button onclick="resetApp()" class="w-9 h-9 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center text-white/65 hover:text-white transition text-sm" title="リセット">
+            ↺
+          </button>
+          <button onclick="toggleCamera()" id="cam-toggle-btn" class="w-9 h-9 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center text-white/65 hover:text-white transition text-xs" title="カメラのオン/オフ">
+            📷
+          </button>
+        </div>
+
+        <!-- 中央：記録開始ボタン -->
+        <button id="main-play-btn" onclick="toggleRecord()" class="flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-white text-neutral-950 font-bold text-sm shadow-[0_0_24px_rgba(255,255,255,0.22)] hover:scale-105 active:scale-95 transition-all">
+          <span id="play-icon" class="text-xs">▶</span>
+          <span id="play-label">記録開始</span>
+        </button>
+
+        <!-- 右側：倍速切替コントロール（2.0x / 1.0x / 0.5x） -->
+        <div class="relative">
+          <!-- 倍速選択ポップアップメニュー -->
+          <div id="speed-menu" class="hidden absolute bottom-12 right-0 glass-float rounded-2xl p-1.5 flex flex-col gap-1 min-w-[78px] z-40">
+            <button onclick="setPlaybackSpeed(2)" id="speed-opt-2" class="speed-opt text-xs font-mono py-1.5 px-3 rounded-xl text-white/75 hover:bg-white/10 text-right transition">
+              2.0x
+            </button>
+            <button onclick="setPlaybackSpeed(1)" id="speed-opt-1" class="speed-opt text-xs font-mono py-1.5 px-3 rounded-xl bg-white/20 text-white font-semibold text-right transition">
+              1.0x
+            </button>
+            <button onclick="setPlaybackSpeed(0.5)" id="speed-opt-0.5" class="speed-opt text-xs font-mono py-1.5 px-3 rounded-xl text-white/75 hover:bg-white/10 text-right transition">
+              0.5x
+            </button>
+          </div>
+
+          <!-- 倍速表示トリガーボタン（クリックでメニュー開閉） -->
+          <button onclick="toggleSpeedMenu()" id="speed-trigger-btn" class="h-9 px-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-xs font-mono font-semibold text-white transition" title="再生速度を変更 (2.0x / 1.0x / 0.5x)">
+            1.0x
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let isPlaying = false;
+    let progress = 0; // 0 ~ 100
+    let playbackSpeed = 1; // 0.5, 1, 2
+    let timerInterval = null;
+    let stageTriggered = { sleep: false, stress: false, skin: false };
+    let cameraStream = null;
+
+    const userData = {
+      sleep: null,
+      sleepTemp: 7.5,
+      stress: null,
+      stressTemp: 3
+    };
+
+    const stressMap = { 1: '穏やか', 2: '安定', 3: '普通', 4: 'やや高い', 5: '高負荷' };
+
+    const progressFill = document.getElementById('progress-fill');
+    const progressThumb = document.getElementById('progress-thumb');
+    const timeCurrent = document.getElementById('time-current');
+    const chapterPreview = document.getElementById('chapter-preview');
+    const playIcon = document.getElementById('play-icon');
+    const playLabel = document.getElementById('play-label');
+    const statusBadge = document.getElementById('status-badge');
+    const scanLine = document.getElementById('scan-line');
+
+    // 倍速メニューの開閉
+    function toggleSpeedMenu() {
+      const menu = document.getElementById('speed-menu');
+      menu.classList.toggle('hidden');
+    }
+
+    // 画面の別の場所をクリックしたら倍速メニューを閉じる
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('speed-menu');
+      const btn = document.getElementById('speed-trigger-btn');
+      if (!menu.contains(e.target) && !btn.contains(e.target)) {
+        menu.classList.add('hidden');
+      }
+    });
+
+    // 倍速の設定 (2.0x / 1.0x / 0.5x)
+    function setPlaybackSpeed(speed) {
+      playbackSpeed = speed;
+      const label = speed === 2 ? '2.0x' : speed === 0.5 ? '0.5x' : '1.0x';
+      
+      const triggerBtn = document.getElementById('speed-trigger-btn');
+      triggerBtn.textContent = label;
+      
+      // 1.0x以外のときはアクセントカラーで強調表示
+      if (speed !== 1) {
+        triggerBtn.classList.add('border-sky-400/60', 'text-sky-300', 'bg-sky-400/15');
+        triggerBtn.classList.remove('border-white/15', 'text-white', 'bg-white/10');
+        const topPill = document.getElementById('top-speed-pill');
+        topPill.textContent = `${label} 再生`;
+        topPill.classList.remove('hidden');
+      } else {
+        triggerBtn.classList.remove('border-sky-400/60', 'text-sky-300', 'bg-sky-400/15');
+        triggerBtn.classList.add('border-white/15', 'text-white', 'bg-white/10');
+        document.getElementById('top-speed-pill').classList.add('hidden');
+      }
+
+      // メニュー内の選択状態を更新
+      document.querySelectorAll('.speed-opt').forEach(el => {
+        el.classList.remove('bg-white/20', 'text-white', 'font-semibold');
+        el.classList.add('text-white/75');
+      });
+      const activeOpt = document.getElementById(`speed-opt-${speed}`);
+      if (activeOpt) {
+        activeOpt.classList.add('bg-white/20', 'text-white', 'font-semibold');
+        activeOpt.classList.remove('text-white/75');
+      }
+
+      document.getElementById('speed-menu').classList.add('hidden');
+    }
+
+    document.getElementById('sleep-slider').addEventListener('input', (e) => {
+      userData.sleepTemp = e.target.value;
+      document.getElementById('sleep-val-display').textContent = e.target.value;
+    });
+
+    function toggleRecord() {
+      if (progress >= 100) {
+        resetApp();
+      }
+      isPlaying = !isPlaying;
+      updatePlayBtn();
+
+      if (isPlaying) {
+        scanLine.classList.remove('hidden');
+        statusBadge.textContent = '記録進行中';
+        startTimeline();
+      } else {
+        scanLine.classList.add('hidden');
+        statusBadge.textContent = '一時停止中';
+        clearInterval(timerInterval);
+      }
+    }
+
+    function updatePlayBtn() {
+      if (isPlaying) {
+        playIcon.textContent = '⏸';
+        playLabel.textContent = '一時停止';
+      } else {
+        playIcon.textContent = '▶';
+        playLabel.textContent = progress > 0 && progress < 100 ? '記録再開' : '記録開始';
+      }
+    }
+
+    // メインタイムライン（100msごとに 0.5% * playbackSpeed 進行）
+    function startTimeline() {
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (!isPlaying) return;
+
+        progress += 0.5 * playbackSpeed;
+        if (progress > 100) progress = 100;
+        renderProgress();
+
+        // 15% -> 睡眠記録を自動起動
+        if (progress >= 15 && progress < 45 && !stageTriggered.sleep) {
+          stageTriggered.sleep = true;
+          openSleepStage();
+        }
+
+        // 睡眠スキップ残り秒数をタイムライン進捗と連動してリアルタイム更新
+        if (!document.getElementById('card-sleep').classList.contains('hidden')) {
+          const remainingProgress = Math.max(0, 45 - progress);
+          // 30% = 6秒 (1秒 = 5%)
+          const remainSec = Math.ceil(remainingProgress / 5);
+          document.getElementById('sleep-timer').textContent = `残り 0${remainSec}秒でスキップ`;
+        }
+
+        // 45% -> 未回答なら自動スキップ
+        if (progress >= 45 && !document.getElementById('card-sleep').classList.contains('hidden')) {
+          hideAllOverlays();
+          chapterPreview.textContent = '睡眠記録をスキップ・次へ進みます';
+        }
+
+        // 50% -> ストレス記録を自動起動
+        if (progress >= 50 && progress < 80 && !stageTriggered.stress) {
+          stageTriggered.stress = true;
+          openStressStage();
+        }
+
+        // ストレススキップ残り秒数をタイムライン進捗と連動してリアルタイム更新
+        if (!document.getElementById('card-stress').classList.contains('hidden')) {
+          const remainingProgress = Math.max(0, 80 - progress);
+          const remainSec = Math.ceil(remainingProgress / 5);
+          document.getElementById('stress-timer').textContent = `残り 0${remainSec}秒でスキップ`;
+        }
+
+        // 80% -> 未回答なら自動スキップ
+        if (progress >= 80 && !document.getElementById('card-stress').classList.contains('hidden')) {
+          hideAllOverlays();
+          chapterPreview.textContent = 'ストレス記録をスキップ・肌診断へ';
+        }
+
+        // 85% -> 肌診断ポップアップを表示（選択待ちのためタイムライン一時停止）
+        if (progress >= 85 && !stageTriggered.skin) {
+          stageTriggered.skin = true;
+          openSkinPopup();
+        }
+      }, 100);
+    }
+
+    function renderProgress() {
+      progressFill.style.width = `${progress}%`;
+      progressThumb.style.left = `${progress}%`;
+      const sec = Math.floor((progress / 100) * 20);
+      timeCurrent.textContent = `00:${sec.toString().padStart(2, '0')}`;
+    }
+
+    function jumpToStage(stage) {
+      clearInterval(timerInterval);
+      hideAllOverlays();
+      document.getElementById('card-result-overlay').classList.add('hidden');
+      document.getElementById('captured-photo').classList.add('hidden');
+
+      if (stage === 'sleep') {
+        progress = 15;
+        stageTriggered = { sleep: true, stress: false, skin: false };
+        isPlaying = true;
+        updatePlayBtn();
+        scanLine.classList.remove('hidden');
+        statusBadge.textContent = '記録進行中';
+        renderProgress();
+        openSleepStage();
+        startTimeline();
+      } else if (stage === 'stress') {
+        progress = 50;
+        stageTriggered = { sleep: true, stress: true, skin: false };
+        isPlaying = true;
+        updatePlayBtn();
+        scanLine.classList.remove('hidden');
+        statusBadge.textContent = '記録進行中';
+        renderProgress();
+        openStressStage();
+        startTimeline();
+      } else if (stage === 'skin') {
+        progress = 85;
+        stageTriggered = { sleep: true, stress: true, skin: true };
+        isPlaying = true;
+        updatePlayBtn();
+        renderProgress();
+        openSkinPopup();
+      }
+    }
+
+    function hideAllOverlays() {
+      ['card-sleep', 'card-stress', 'card-skin-popup', 'card-countdown', 'card-analyzing'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+    }
+
+    // 1. 睡眠記録
+    function openSleepStage() {
+      hideAllOverlays();
+      document.getElementById('card-sleep').classList.remove('hidden');
+      document.getElementById('sleep-timer').textContent = `残り 06秒でスキップ`;
+      chapterPreview.textContent = '🌙 記録中：睡眠時間';
+    }
+
+    function confirmSleep() {
+      userData.sleep = userData.sleepTemp;
+      hideAllOverlays();
+      chapterPreview.textContent = `✓ 睡眠 ${userData.sleep}時間 を記録しました`;
+    }
+
+    // 2. ストレス記録
+    function openStressStage() {
+      hideAllOverlays();
+      document.getElementById('card-stress').classList.remove('hidden');
+      document.getElementById('stress-timer').textContent = `残り 06秒でスキップ`;
+      chapterPreview.textContent = '⚡ 記録中：ストレス指数';
+    }
+
+    function selectStress(level, btn) {
+      userData.stressTemp = level;
+      document.querySelectorAll('.stress-btn').forEach(b => {
+        b.classList.remove('bg-amber-400/25', 'border-amber-300');
+        b.classList.add('bg-white/5', 'border-white/10');
+      });
+      btn.classList.remove('bg-white/5', 'border-white/10');
+      btn.classList.add('bg-amber-400/25', 'border-amber-300');
+    }
+
+    function confirmStress() {
+      userData.stress = userData.stressTemp;
+      hideAllOverlays();
+      chapterPreview.textContent = `✓ ストレス [${stressMap[userData.stress]}] を記録しました`;
+    }
+
+    // 3. 肌診断ポップアップ
+    function openSkinPopup() {
+      clearInterval(timerInterval);
+      hideAllOverlays();
+      document.getElementById('card-skin-popup').classList.remove('hidden');
+      chapterPreview.textContent = '✨ 写真のアップロードまたは撮影を選択';
+      statusBadge.textContent = '撮影・選択待ち';
+    }
+
+    function handlePhotoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = document.getElementById('captured-photo');
+        img.src = e.target.result;
+        img.classList.remove('hidden');
+        runSkinDiagnosis();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function startPhotoCountdown() {
+      hideAllOverlays();
+      document.getElementById('card-countdown').classList.remove('hidden');
+      chapterPreview.textContent = '📸 撮影準備中・枠内に顔を合わせてください';
+      let count = 3;
+      const numEl = document.getElementById('countdown-number');
+      numEl.textContent = count;
+
+      const cdTimer = setInterval(() => {
+        count--;
+        if (count > 0) {
+          numEl.textContent = count;
+        } else {
+          clearInterval(cdTimer);
+          capturePhotoWithoutFlash();
+        }
+      }, 1000);
+    }
+
+    function capturePhotoWithoutFlash() {
+      const shutter = document.getElementById('shutter-layer');
+      shutter.classList.remove('shutter-active');
+      void shutter.offsetWidth;
+      shutter.classList.add('shutter-active');
+
+      const video = document.getElementById('real-camera');
+      const img = document.getElementById('captured-photo');
+      const canvas = document.createElement('canvas');
+
+      if (cameraStream && !video.classList.contains('hidden')) {
+        canvas.width = video.videoWidth || 600;
+        canvas.height = video.videoHeight || 800;
+        const ctx = canvas.getContext('2d');
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      } else {
+        canvas.width = 600;
+        canvas.height = 800;
+        const ctx = canvas.getContext('2d');
+        const grad = ctx.createRadialGradient(300, 360, 40, 300, 400, 430);
+        grad.addColorStop(0, '#e2c2b0');
+        grad.addColorStop(0.55, '#a88470');
+        grad.addColorStop(1, '#1e293b');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 600, 800);
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.font = '18px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('RINZME CAPTURED PHOTO', 300, 720);
+      }
+
+      img.src = canvas.toDataURL('image/png');
+      img.classList.remove('hidden');
+
+      setTimeout(() => {
+        runSkinDiagnosis();
+      }, 400);
+    }
+
+    function runSkinDiagnosis() {
+      hideAllOverlays();
+      document.getElementById('card-analyzing').classList.remove('hidden');
+      chapterPreview.textContent = '🔬 肌状態を判定しています...';
+      statusBadge.textContent = 'AI 診断中';
+
+      const finishTimer = setInterval(() => {
+        if (progress < 100) {
+          progress += 1 * playbackSpeed;
+          if (progress > 100) progress = 100;
+          renderProgress();
+        } else {
+          clearInterval(finishTimer);
+        }
+      }, 100);
+
+      setTimeout(() => {
+        clearInterval(finishTimer);
+        progress = 100;
+        renderProgress();
+        isPlaying = false;
+        scanLine.classList.add('hidden');
+        hideAllOverlays();
+
+        document.getElementById('res-sleep').textContent = userData.sleep !== null ? `${userData.sleep}時間` : 'スキップ';
+        document.getElementById('res-stress').textContent = userData.stress !== null ? `${stressMap[userData.stress]}` : 'スキップ';
+
+        document.getElementById('card-result-overlay').classList.remove('hidden');
+        statusBadge.textContent = '診断完了';
+        chapterPreview.textContent = '✅ 肌診断完了・おすすめ製品を表示中';
+        playIcon.textContent = '↺';
+        playLabel.textContent = 'もう一度記録';
+      }, Math.max(800, 1800 / playbackSpeed));
+    }
+
+    async function toggleCamera() {
+      const video = document.getElementById('real-camera');
+      const mockBg = document.getElementById('mock-camera-bg');
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(t => t.stop());
+        cameraStream = null;
+        video.classList.add('hidden');
+        mockBg.classList.remove('hidden');
+        statusBadge.textContent = 'カメラプレビュー中';
+        return;
+      }
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+        video.srcObject = cameraStream;
+        video.classList.remove('hidden');
+        mockBg.classList.add('hidden');
+        statusBadge.textContent = 'インカメラ起動中';
+      } catch (err) {
+        alert('カメラへのアクセスが許可されていないため、プレビューモードを継続します。');
+      }
+    }
+
+    function resetApp() {
+      clearInterval(timerInterval);
+      isPlaying = false;
+      progress = 0;
+      stageTriggered = { sleep: false, stress: false, skin: false };
+      userData.sleep = null;
+      userData.stress = null;
+      hideAllOverlays();
+      document.getElementById('card-result-overlay').classList.add('hidden');
+      document.getElementById('captured-photo').classList.add('hidden');
+      scanLine.classList.add('hidden');
+      renderProgress();
+      statusBadge.textContent = cameraStream ? 'インカメラ起動中' : 'カメラプレビュー中';
+      chapterPreview.textContent = '記録開始、またはアイコンで移動';
+      playIcon.textContent = '▶';
+      playLabel.textContent = '記録開始';
+    }
+  </script>
+</body>
+</html>
